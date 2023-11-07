@@ -1,0 +1,27 @@
+{% extends 'base.html' %}
+{% block content %}
+    <table class="min-w-full divide-y divide-gray-200">
+        <thead>
+          <tr>
+            <th class="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Godziny</th>
+            <th class="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Poniedziałek</th>
+            <th class="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Wtorek</th>
+            <th class="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Środa</th>
+            <th class="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Czwartek</th>
+            <th class="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Piątek</th>
+          </tr>
+        </thead>
+        <tbody class="bg-white divide-y divide-gray-200">
+          {% for row in data %}
+          <tr>
+            <td class="px-6 py-4 whitespace">{{ row.Unnamed }}</td>
+            <td class="px-6 py-4 whitespace">{{ row.Poniedziałek }}</td>
+            <td class="px-6 py-4 whitespace-">{{ row.Wtorek }}</td>
+            <td class="px-6 py-4 whitespace">{{ row.Środa }}</td>
+            <td class="px-6 py-4 whitespace">{{ row.Czwartek }}</td>
+            <td class="px-6 py-4 whitespace">{{ row.Piątek }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+{% endblock %}
