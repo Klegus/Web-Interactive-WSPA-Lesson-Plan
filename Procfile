@@ -1,1 +1,1 @@
-web: gunicorn 'WSPAInteractiveLessonPlan.wsgi.application'
+web: gunicorn 'WSPAInteractiveLessonPlan.wsgi'
