@@ -20,4 +20,5 @@ from LessonPlan import views
 
 urlpatterns = [
     path('',views.index, name='index'),
+    path('change_group',views.change_group, name='change_group'),
 ]
