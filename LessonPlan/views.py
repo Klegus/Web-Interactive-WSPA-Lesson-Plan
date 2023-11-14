@@ -31,6 +31,8 @@ def get_latest_document_for_group(group: int):
 
     # Get the latest document for the specified group
     latest_document = collection.find_one({group_key: {"$exists": True}}, sort=[('_id', DESCENDING)])
+    # to the latest document add the time speed and time_update from the database
+    
 
     # Close the client
     client.close()
@@ -43,7 +45,7 @@ def index(request):
     # Ensure the group number is an integer
     group = int(group)
     data = get_latest_document_for_group(group)
-    return render(request, 'main/index.html', {'data': data[f"group{group}"], 'current_group': group})
+    return render(request, 'main/index.html', {'data': data[f"group{group}"], 'current_group': group, 'time_update': data["time_update"], 'time_speed': data["time_speed"]})
 
 def change_group(request):
     group = request.POST.get('group', 1)
