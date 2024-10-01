@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Plan Lekcji</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <style>
+        body {
+            background: linear-gradient(120deg, #f0f4f8 0%, #d9e2ec 100%);
+        }
+        .comparison-card {
+            transition: all 0.3s ease;
+        }
+        .comparison-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+        }
+        .custom-select {
+            background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
+            background-position: right 0.5rem center;
+            background-repeat: no-repeat;
+            background-size: 1.5em 1.5em;
+            padding-right: 2.5rem;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+        }
+    </style>
+</head>
+<body class="min-h-screen font-sans text-gray-800">
+    <div class="container mx-auto px-4 py-12">
+        <h1 class="text-5xl font-extrabold mb-12 text-center text-gray-700">Plan Lekcji</h1>
+        <div class="mb-8 max-w-md mx-auto">
+            <label for="group-select" class="block text-lg font-medium text-gray-700 mb-2">Wybierz grupę:</label>
+            <select id="group-select" class="custom-select block w-full px-4 py-3 text-base border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 rounded-lg shadow-sm bg-white">
+                <option value="">Wybierz grupę</option>
+                {% for group in groups %}
+                <option value="{{ group }}">{{ group }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div id="plan-container" class="bg-white p-8 rounded-lg shadow-lg mb-12 hidden">
+            <h2 id="group-name" class="text-3xl font-bold mb-3 text-gray-800"></h2>
+            <p id="plan-date" class="mb-6 text-gray-600"></p>
+            <div id="plan-content" class="overflow-x-auto"></div>
+        </div>
+
+        <h2 class="text-4xl font-bold mb-8 text-center text-gray-700">Porównania planów dla wybranej grupy</h2>
+        <div id="comparisons-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8"></div>
+    </div>
+    <script>
+        const groupSelect = document.getElementById('group-select');
+        const planContainer = document.getElementById('plan-container');
+        const groupNameElement = document.getElementById('group-name');
+        const planDateElement = document.getElementById('plan-date');
+        const planContentElement = document.getElementById('plan-content');
+        const comparisonsContainer = document.getElementById('comparisons-container');
+
+        const colors = [
+            'bg-blue-50 border-blue-200 text-blue-800',
+            'bg-green-50 border-green-200 text-green-800',
+            'bg-yellow-50 border-yellow-200 text-yellow-800',
+            'bg-red-50 border-red-200 text-red-800',
+            'bg-indigo-50 border-indigo-200 text-indigo-800',
+            'bg-purple-50 border-purple-200 text-purple-800',
+            'bg-pink-50 border-pink-200 text-pink-800'
+        ];
+
+        groupSelect.addEventListener('change', async (event) => {
+            const selectedGroup = event.target.value;
+            if (selectedGroup) {
+                try {
+                    // Pobierz plan lekcji
+                    const planResponse = await axios.get(`/api/plan/${selectedGroup}`);
+                    const { group_name, plan_html, timestamp } = planResponse.data;
+                    
+                    groupNameElement.textContent = group_name;
+                    planDateElement.textContent = `Data: ${new Date(timestamp).toLocaleString()}`;
+                    planContentElement.innerHTML = plan_html;
+                    
+                    // Zastosuj style Tailwind do tabeli planu lekcji
+                    const table = planContentElement.querySelector('table');
+                    if (table) {
+                        table.classList.add('w-full', 'border-collapse', 'border', 'border-gray-200');
+                        const cells = table.querySelectorAll('th, td');
+                        cells.forEach(cell => {
+                            cell.classList.add('border', 'border-gray-200', 'p-2', 'text-sm');
+                        });
+                    }
+                    
+                    planContainer.classList.remove('hidden');
+
+                    // Pobierz porównania dla wybranej grupy
+                    const comparisonsResponse = await axios.get(`/api/comparisons/${selectedGroup}`);
+                    const comparisons = comparisonsResponse.data;
+
+                    // Wyświetl porównania
+                    comparisonsContainer.innerHTML = comparisons
+                        .filter(comparison => comparison.results[selectedGroup].trim() !== "Brak różnic.")
+                        .map((comparison, index) => `
+                            <div class="comparison-card ${colors[index % colors.length]} p-6 rounded-lg shadow-md border-l-4">
+                                <h3 class="text-xl font-semibold mb-3">Porównanie z ${new Date(comparison.timestamp).toLocaleString()}</h3>
+                                <p class="mb-1"><strong>Nowszy plan:</strong> ${new Date(comparison.newer_plan_timestamp).toLocaleString()}</p>
+                                <p class="mb-1"><strong>Starszy plan:</strong> ${new Date(comparison.older_plan_timestamp).toLocaleString()}</p>
+                                <p class="mb-3"><strong>Model:</strong> ${comparison.model_used}</p>
+                                <div class="mt-3">
+                                    <h4 class="font-semibold mb-2">Zmiany:</h4>
+                                    <p>${comparison.results[selectedGroup]}</p>
+                                </div>
+                            </div>
+                        `).join('');
+
+                    if (comparisonsContainer.innerHTML === '') {
+                        comparisonsContainer.innerHTML = '<p class="text-xl text-center text-gray-600">Brak zmian w ostatnich porównaniach.</p>';
+                    }
+
+                } catch (error) {
+                    console.error('Błąd podczas pobierania danych:', error);
+                    planContainer.classList.add('hidden');
+                    comparisonsContainer.innerHTML = '<p class="text-xl text-center text-red-600">Wystąpił błąd podczas pobierania danych.</p>';
+                }
+            } else {
+                planContainer.classList.add('hidden');
+                comparisonsContainer.innerHTML = '';
+            }
+        });
+    </script>
+</body>
+</html>
