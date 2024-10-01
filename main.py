@@ -16,7 +16,7 @@ if not MONGO_URI:
 
 try:
     client = MongoClient(MONGO_URI)
-    db = client['lesson']
+    db = client['Lesson']
     # Sprawdź połączenie
     client.admin.command('ismaster')
     print("Successfully connected to MongoDB")
