@@ -10,7 +10,7 @@ from mangum import Mangum
 app = FastAPI()
 
 # Pobierz MongoDB URI ze zmiennej środowiskowej
-MONGO_URI = os.environ.get("MONGO_URI")
+MONGO_URI = "mongodb+srv://LessonPlanAdmin:Metalzbyt1@lessonplan.brams.mongodb.net/?retryWrites=true&w=majority&appName=LessonPlan"
 if not MONGO_URI:
     raise ValueError("MONGO_URI environment variable is not set")
 
