@@ -118,8 +118,9 @@
         }
 
         function convertTimeToMinutes(timeString) {
-            const hours = Math.floor(timeString / 100);
-            const minutes = timeString % 100;
+            // Usuwamy znaczniki HTML przed konwersją
+            const cleanTimeString = timeString.replace(/<[^>]*>/g, '');
+            const [hours, minutes] = cleanTimeString.split(':').map(Number);
             return hours * 60 + minutes;
         }
         function formatMinutesToTime(minutes) {
@@ -130,13 +131,20 @@
 
         function formatCellContent(content, isTimeColumn) {
             if (isTimeColumn) {
-                return content; // Nie formatuj kolumny z czasem
+                return formatTimeColumn(content);
             }
             const parts = content.split('-');
             if (parts.length > 1) {
                 return `<span class="subject">${parts[0].trim()}</span>${parts.slice(1).join('-')}`;
             }
             return content;
+        }
+        function formatTimeColumn(content) {
+            const times = content.split('-');
+            return times.map(time => {
+                const [hours, minutes] = time.trim().split(/(\d{2})$/);
+                return `${hours}<sup>${minutes}</sup>`;
+            }).join(' - ');
         }
 
         function highlightCurrentTimeSlot() {
@@ -187,12 +195,12 @@
                 for (let i = 1; i < rows.length; i++) {
                     const timeCell = rows[i].querySelector('td:first-child');
                     if (!timeCell) continue;
-
-                    const timeRange = timeCell.textContent.split('-');
+    
+                    const timeRange = timeCell.textContent.replace(/<[^>]*>/g, '').split('-');
                     if (timeRange.length !== 2) continue;
-
-                    const startTime = convertTimeToMinutes(parseInt(timeRange[0].trim()));
-                    const endTime = convertTimeToMinutes(parseInt(timeRange[1].trim()));
+    
+                    const startTime = convertTimeToMinutes(timeRange[0].trim());
+                    const endTime = convertTimeToMinutes(timeRange[1].trim());
 
                     console.log(`Sprawdzanie przedziału: ${timeRange[0]} - ${timeRange[1]}`);
                     console.log(`Przekonwertowany czas: ${startTime} - ${endTime}`);
