@@ -79,6 +79,12 @@
             return localStorage.getItem('selectedGroup');
         }
 
+        function convertTimeToMinutes(timeString) {
+            const hours = Math.floor(timeString / 100);
+            const minutes = timeString % 100;
+            return hours * 60 + minutes;
+        }
+
         function highlightCurrentTimeSlot() {
             console.log("Rozpoczęcie funkcji highlightCurrentTimeSlot");
             const now = new Date();
@@ -125,12 +131,11 @@
                 const timeRange = timeCell.textContent.split('-');
                 if (timeRange.length !== 2) continue;
 
-                const [startTime, endTime] = timeRange.map(time => {
-                    const [hours, minutes] = time.trim().split(':').map(Number);
-                    return hours * 60 + minutes;
-                });
+                const startTime = convertTimeToMinutes(parseInt(timeRange[0].trim()));
+                const endTime = convertTimeToMinutes(parseInt(timeRange[1].trim()));
 
                 console.log(`Sprawdzanie przedziału: ${timeRange[0]} - ${timeRange[1]}`);
+                console.log(`Przekonwertowany czas: ${startTime} - ${endTime}`);
 
                 if (currentTime >= startTime && currentTime < endTime) {
                     const cellToHighlight = rows[i].querySelectorAll('td')[currentDayColumn];
