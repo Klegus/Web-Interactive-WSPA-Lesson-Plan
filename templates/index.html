@@ -252,7 +252,7 @@
                             const timeToEnd = endTime - currentTime;
                             currentLessonInfo = lessonName ? 
                                 `Aktualna lekcja: ${lessonName}<br>Koniec za: ${formatMinutesToTime(timeToEnd)}` :
-                                "Czas wolny! Może warto się pouczyć? 📚";
+                                "Czas wolny!";
                         } else {
                             console.log(`Nie znaleziono komórki do podświetlenia: rząd ${i}, kolumna ${currentDayColumn}`);
                         }
@@ -270,7 +270,7 @@
                         }
                     }
                 if (!currentLessonInfo) {
-                    currentLessonInfo = "Brak lekcji. Czas na kawę? ☕";
+                    currentLessonInfo = "Brak lekcji.";
                 }
             }
 
