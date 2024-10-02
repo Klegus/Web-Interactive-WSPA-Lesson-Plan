@@ -118,10 +118,10 @@
         }
 
         function convertTimeToMinutes(timeString) {
-            // Usuwamy znaczniki HTML przed konwersją
-            const cleanTimeString = timeString.replace(/<[^>]*>/g, '');
+            // Usuwamy znaczniki HTML i dodatkowe spacje
+            const cleanTimeString = timeString.replace(/<[^>]*>/g, '').trim();
             const [hours, minutes] = cleanTimeString.split(':').map(Number);
-            return hours * 60 + minutes;
+            return hours * 60 + (minutes || 0); // Dodajemy || 0 na wypadek, gdyby minutes były undefined
         }
         function formatMinutesToTime(minutes) {
             const hours = Math.floor(minutes / 60);
@@ -195,10 +195,10 @@
                 for (let i = 1; i < rows.length; i++) {
                     const timeCell = rows[i].querySelector('td:first-child');
                     if (!timeCell) continue;
-    
+
                     const timeRange = timeCell.textContent.replace(/<[^>]*>/g, '').split('-');
                     if (timeRange.length !== 2) continue;
-    
+
                     const startTime = convertTimeToMinutes(timeRange[0].trim());
                     const endTime = convertTimeToMinutes(timeRange[1].trim());
 
@@ -223,9 +223,9 @@
                         if (i + 1 < rows.length) {
                             const nextTimeCell = rows[i + 1].querySelector('td:first-child');
                             if (nextTimeCell) {
-                                const nextTimeRange = nextTimeCell.textContent.split('-');
+                                const nextTimeRange = nextTimeCell.textContent.replace(/<[^>]*>/g, '').split('-');
                                 if (nextTimeRange.length === 2) {
-                                    const nextStartTime = convertTimeToMinutes(parseInt(nextTimeRange[0].trim()));
+                                    const nextStartTime = convertTimeToMinutes(nextTimeRange[0].trim());
                                     const breakTime = nextStartTime - endTime;
                                     nextLessonInfo = `Przerwa: ${formatMinutesToTime(breakTime)}`;
                                 }
