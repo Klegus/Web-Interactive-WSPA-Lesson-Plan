@@ -26,6 +26,10 @@
             -webkit-print-color-adjust: exact;
             print-color-adjust: exact;
         }
+        .current-time-highlight {
+            background-color: #FFFF00 !important;
+            font-weight: bold;
+        }
     </style>
 </head>
 <body class="min-h-screen font-sans text-gray-800">
@@ -67,20 +71,45 @@
             'bg-pink-50 border-pink-200 text-pink-800'
         ];
 
-        // Function to save the selected group
         function saveSelectedGroup(group) {
             localStorage.setItem('selectedGroup', group);
         }
 
-        // Function to load the selected group
         function loadSelectedGroup() {
             return localStorage.getItem('selectedGroup');
+        }
+
+        function highlightCurrentTimeSlot() {
+            const now = new Date();
+            const currentHour = now.getHours();
+            const currentMinute = now.getMinutes();
+            const currentTime = currentHour * 60 + currentMinute;
+
+            const timeSlots = document.querySelectorAll('#plan-content table tr td:first-child');
+            timeSlots.forEach(slot => {
+                const timeRange = slot.textContent.split('-');
+                if (timeRange.length === 2) {
+                    const [startTime, endTime] = timeRange.map(time => {
+                        const [hours, minutes] = time.trim().split(':').map(Number);
+                        return hours * 60 + minutes;
+                    });
+
+                    if (currentTime >= startTime && currentTime < endTime) {
+                        slot.parentElement.querySelectorAll('td').forEach(cell => {
+                            cell.classList.add('current-time-highlight');
+                        });
+                    } else {
+                        slot.parentElement.querySelectorAll('td').forEach(cell => {
+                            cell.classList.remove('current-time-highlight');
+                        });
+                    }
+                }
+            });
         }
 
         async function loadPlanAndComparisons(selectedGroup) {
             if (selectedGroup) {
                 try {
-                    // Pobierz plan lekcji
                     const planResponse = await axios.get(`/api/plan/${selectedGroup}`);
                     const { group_name, plan_html, timestamp } = planResponse.data;
                     
@@ -88,7 +117,6 @@
                     planDateElement.textContent = `Data: ${new Date(timestamp).toLocaleString()}`;
                     planContentElement.innerHTML = plan_html;
                     
-                    // Zastosuj style Tailwind do tabeli planu lekcji
                     const table = planContentElement.querySelector('table');
                     if (table) {
                         table.classList.add('w-full', 'border-collapse', 'border', 'border-gray-200');
@@ -100,11 +128,12 @@
                     
                     planContainer.classList.remove('hidden');
 
-                    // Pobierz porównania dla wybranej grupy
+                    highlightCurrentTimeSlot();
+                    setInterval(highlightCurrentTimeSlot, 60000); // Update every minute
+
                     const comparisonsResponse = await axios.get(`/api/comparisons/${selectedGroup}`);
                     const comparisons = comparisonsResponse.data;
 
-                    // Wyświetl porównania
                     comparisonsContainer.innerHTML = comparisons
                         .filter(comparison => comparison.results[selectedGroup].trim() !== "Brak różnic.")
                         .map((comparison, index) => `
@@ -140,7 +169,6 @@
             await loadPlanAndComparisons(selectedGroup);
         });
 
-        // Load the last selected group on page load
         window.addEventListener('DOMContentLoaded', async () => {
             const lastSelectedGroup = loadSelectedGroup();
             if (lastSelectedGroup) {
