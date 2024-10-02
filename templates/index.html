@@ -128,7 +128,10 @@
             return `${hours.toString().padStart(2, '0')}:${mins.toString().padStart(2, '0')}`;
         }
 
-        function formatCellContent(content) {
+        function formatCellContent(content, isTimeColumn) {
+            if (isTimeColumn) {
+                return content; // Nie formatuj kolumny z czasem
+            }
             const parts = content.split('-');
             if (parts.length > 1) {
                 return `<span class="subject">${parts[0].trim()}</span>${parts.slice(1).join('-')}`;
@@ -255,12 +258,16 @@
                     const table = planContentElement.querySelector('table');
                     if (table) {
                         table.classList.add('w-full', 'border-collapse', 'border', 'border-gray-200');
-                        const cells = table.querySelectorAll('th, td');
-                        cells.forEach(cell => {
-                            cell.classList.add('border', 'border-gray-200', 'p-2', 'text-sm');
-                            if (cell.tagName === 'TD') {
-                                cell.innerHTML = formatCellContent(cell.textContent);
-                            }
+                        const rows = table.querySelectorAll('tr');
+                        rows.forEach((row, rowIndex) => {
+                            const cells = row.querySelectorAll('th, td');
+                            cells.forEach((cell, cellIndex) => {
+                                cell.classList.add('border', 'border-gray-200', 'p-2', 'text-sm');
+                                if (cell.tagName === 'TD') {
+                                    const isTimeColumn = cellIndex === 0;
+                                    cell.innerHTML = formatCellContent(cell.textContent, isTimeColumn);
+                                }
+                            });
                         });
                     }
                     
