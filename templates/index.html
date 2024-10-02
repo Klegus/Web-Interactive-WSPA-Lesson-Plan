@@ -40,6 +40,33 @@
                 background-color: rgba(255, 255, 0, 0.1);
             }
         }
+        #plan-content table {
+            table-layout: fixed;
+            width: 100%;
+        }
+        #plan-content td {
+            text-align: center;
+            vertical-align: middle;
+            height: 60px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        #plan-content td span.subject {
+            font-weight: bold;
+            display: block;
+        }
+        @media (max-width: 640px) {
+            #plan-content {
+                overflow-x: auto;
+                scroll-snap-type: x mandatory;
+            }
+            #plan-content table {
+                min-width: 640px;
+            }
+            #plan-content td {
+                scroll-snap-align: center;
+            }
+        }
     </style>
 </head>
 <body class="min-h-screen font-sans text-gray-800">
@@ -101,6 +128,14 @@
             return `${hours.toString().padStart(2, '0')}:${mins.toString().padStart(2, '0')}`;
         }
 
+        function formatCellContent(content) {
+            const parts = content.split('-');
+            if (parts.length > 1) {
+                return `<span class="subject">${parts[0].trim()}</span>${parts.slice(1).join('-')}`;
+            }
+            return content;
+        }
+
         function highlightCurrentTimeSlot() {
             console.log("Rozpoczęcie funkcji highlightCurrentTimeSlot");
             const now = new Date();
@@ -139,54 +174,72 @@
                 cell.classList.remove('current-time-highlight');
             });
 
-            let currentLessonInfo = "Brak zajęć";
+            let currentLessonInfo = "";
             let nextLessonInfo = "";
 
-            // Sprawdź każdy wiersz z godziną (pomijając nagłówek)
-            for (let i = 1; i < rows.length; i++) {
-                const timeCell = rows[i].querySelector('td:first-child');
-                if (!timeCell) continue;
+            if (currentDay === 0 || currentDay === 6) {
+                currentLessonInfo = "Weekend! Czas na relaks i zabawę! 🎉";
+            } else {
+                // Sprawdź każdy wiersz z godziną (pomijając nagłówek)
+                for (let i = 1; i < rows.length; i++) {
+                    const timeCell = rows[i].querySelector('td:first-child');
+                    if (!timeCell) continue;
 
-                const timeRange = timeCell.textContent.split('-');
-                if (timeRange.length !== 2) continue;
+                    const timeRange = timeCell.textContent.split('-');
+                    if (timeRange.length !== 2) continue;
 
-                const startTime = convertTimeToMinutes(parseInt(timeRange[0].trim()));
-                const endTime = convertTimeToMinutes(parseInt(timeRange[1].trim()));
+                    const startTime = convertTimeToMinutes(parseInt(timeRange[0].trim()));
+                    const endTime = convertTimeToMinutes(parseInt(timeRange[1].trim()));
 
-                console.log(`Sprawdzanie przedziału: ${timeRange[0]} - ${timeRange[1]}`);
-                console.log(`Przekonwertowany czas: ${startTime} - ${endTime}`);
+                    console.log(`Sprawdzanie przedziału: ${timeRange[0]} - ${timeRange[1]}`);
+                    console.log(`Przekonwertowany czas: ${startTime} - ${endTime}`);
 
-                if (currentTime >= startTime && currentTime < endTime) {
-                    const cellToHighlight = rows[i].querySelectorAll('td')[currentDayColumn];
-                    if (cellToHighlight) {
-                        cellToHighlight.classList.add('current-time-highlight');
-                        console.log(`Podświetlono komórkę: rząd ${i}, kolumna ${currentDayColumn}`);
-                        const lessonName = cellToHighlight.textContent.trim();
-                        const timeToEnd = endTime - currentTime;
-                        currentLessonInfo = `Aktualna lekcja: ${lessonName}<br>Koniec za: ${formatMinutesToTime(timeToEnd)}`;
-                    } else {
-                        console.log(`Nie znaleziono komórki do podświetlenia: rząd ${i}, kolumna ${currentDayColumn}`);
-                    }
-                    
-                    // Sprawdź następną lekcję
-                    if (i + 1 < rows.length) {
-                        const nextTimeCell = rows[i + 1].querySelector('td:first-child');
-                        if (nextTimeCell) {
-                            const nextTimeRange = nextTimeCell.textContent.split('-');
-                            if (nextTimeRange.length === 2) {
-                                const nextStartTime = convertTimeToMinutes(parseInt(nextTimeRange[0].trim()));
-                                const breakTime = nextStartTime - endTime;
-                                nextLessonInfo = `Przerwa: ${formatMinutesToTime(breakTime)}`;
+                    if (currentTime >= startTime && currentTime < endTime) {
+                        const cellToHighlight = rows[i].querySelectorAll('td')[currentDayColumn];
+                        if (cellToHighlight) {
+                            cellToHighlight.classList.add('current-time-highlight');
+                            console.log(`Podświetlono komórkę: rząd ${i}, kolumna ${currentDayColumn}`);
+                            const lessonName = cellToHighlight.textContent.trim();
+                            const timeToEnd = endTime - currentTime;
+                            currentLessonInfo = lessonName ? 
+                                `Aktualna lekcja: ${lessonName}<br>Koniec za: ${formatMinutesToTime(timeToEnd)}` :
+                                "Czas wolny! Może warto się pouczyć? 📚";
+                        } else {
+                            console.log(`Nie znaleziono komórki do podświetlenia: rząd ${i}, kolumna ${currentDayColumn}`);
+                        }
+                        
+                        // Sprawdź następną lekcję
+                        if (i + 1 < rows.length) {
+                            const nextTimeCell = rows[i + 1].querySelector('td:first-child');
+                            if (nextTimeCell) {
+                                const nextTimeRange = nextTimeCell.textContent.split('-');
+                                if (nextTimeRange.length === 2) {
+                                    const nextStartTime = convertTimeToMinutes(parseInt(nextTimeRange[0].trim()));
+                                    const breakTime = nextStartTime - endTime;
+                                    nextLessonInfo = `Przerwa: ${formatMinutesToTime(breakTime)}`;
+                                }
                             }
                         }
+                        break;
                     }
-                    break;
+                }
+
+                if (!currentLessonInfo) {
+                    currentLessonInfo = "Brak lekcji. Czas na kawę? ☕";
                 }
             }
 
             // Aktualizuj pole informacyjne
             const infoElement = document.getElementById('current-lesson-info');
             infoElement.innerHTML = `${currentLessonInfo}<br>${nextLessonInfo}`;
+
+            // Centrowanie widoku na podświetlonej komórce na urządzeniach mobilnych
+            if (window.innerWidth <= 640) {
+                const highlightedCell = table.querySelector('.current-time-highlight');
+                if (highlightedCell) {
+                    highlightedCell.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'center' });
+                }
+            }
         }
 
         async function loadPlanAndComparisons(selectedGroup) {
@@ -205,6 +258,9 @@
                         const cells = table.querySelectorAll('th, td');
                         cells.forEach(cell => {
                             cell.classList.add('border', 'border-gray-200', 'p-2', 'text-sm');
+                            if (cell.tagName === 'TD') {
+                                cell.innerHTML = formatCellContent(cell.textContent);
+                            }
                         });
                     }
                     
