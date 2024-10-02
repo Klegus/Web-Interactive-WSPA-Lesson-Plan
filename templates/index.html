@@ -67,6 +67,11 @@
                 scroll-snap-align: center;
             }
         }
+        #countdown {
+            font-size: 1.2em;
+            font-weight: bold;
+            color: #4a5568;
+        }
     </style>
 </head>
 <body class="min-h-screen font-sans text-gray-800">
@@ -98,7 +103,7 @@
         const planDateElement = document.getElementById('plan-date');
         const planContentElement = document.getElementById('plan-content');
         const comparisonsContainer = document.getElementById('comparisons-container');
-
+        let countdownInterval;
         const colors = [
             'bg-blue-50 border-blue-200 text-blue-800',
             'bg-green-50 border-green-200 text-green-800',
@@ -116,7 +121,26 @@
         function loadSelectedGroup() {
             return localStorage.getItem('selectedGroup');
         }
-
+        function startCountdown(endTime) {
+            clearInterval(countdownInterval);
+            const countdownElement = document.getElementById('countdown');
+            
+            countdownInterval = setInterval(() => {
+                const now = new Date();
+                const currentTime = now.getHours() * 60 + now.getMinutes();
+                const timeLeft = endTime - currentTime;
+                
+                if (timeLeft <= 0) {
+                    clearInterval(countdownInterval);
+                    highlightCurrentTimeSlot(); // Odśwież po zakończeniu odliczania
+                    return;
+                }
+                
+                const minutes = Math.floor(timeLeft);
+                const seconds = Math.floor((timeLeft - minutes) * 60);
+                countdownElement.textContent = formatTimeToDisplay(minutes, seconds);
+            }, 1000);
+        }
         function convertTimeToMinutes(timeString) {
             // Usuwamy znaczniki HTML i dodatkowe spacje
             const cleanTimeString = timeString.replace(/<[^>]*>/g, '').trim();
@@ -154,6 +178,11 @@
                 const [hours, minutes] = time.trim().split(/(\d{2})$/);
                 return `${hours}<sup>${minutes}</sup>`;
             }).join(' - ');
+        }
+        
+
+        function formatTimeToDisplay(minutes, seconds) {
+            return `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
         }
 
         function highlightCurrentTimeSlot() {
@@ -227,23 +256,19 @@
                         } else {
                             console.log(`Nie znaleziono komórki do podświetlenia: rząd ${i}, kolumna ${currentDayColumn}`);
                         }
-                        
-                        // Sprawdź następną lekcję
-                        if (i + 1 < rows.length) {
-                            const nextTimeCell = rows[i + 1].querySelector('td:first-child');
-                            if (nextTimeCell) {
-                                const nextTimeRange = nextTimeCell.textContent.replace(/<[^>]*>/g, '').split('-');
-                                if (nextTimeRange.length === 2) {
-                                    const nextStartTime = convertTimeToMinutes(nextTimeRange[0].trim());
-                                    const breakTime = nextStartTime - endTime;
-                                    nextLessonInfo = `Przerwa: ${formatMinutesToTime(breakTime)}`;
-                                }
+                        break;
+                        } else if (i > 1) {
+                            const prevEndTime = convertTimeToMinutes(rows[i-1].querySelector('td:first-child').textContent.replace(/<[^>]*>/g, '').split('-')[1].trim());
+                            if (currentTime >= prevEndTime && currentTime < startTime) {
+                                isBreak = true;
+                                breakEndTime = startTime;
+                                const breakDuration = startTime - currentTime;
+                                currentLessonInfo = `Trwa przerwa!<br>Do końca przerwy: <span id="countdown">${formatTimeToDisplay(Math.floor(breakDuration), Math.floor((breakDuration % 1) * 60))}</span>`;
+                                startCountdown(startTime);
+                                break;
                             }
                         }
-                        break;
                     }
-                }
-
                 if (!currentLessonInfo) {
                     currentLessonInfo = "Brak lekcji. Czas na kawę? ☕";
                 }
@@ -252,7 +277,9 @@
             // Aktualizuj pole informacyjne
             const infoElement = document.getElementById('current-lesson-info');
             infoElement.innerHTML = `${currentLessonInfo}<br>${nextLessonInfo}`;
-
+            if (!isBreak) {
+                clearInterval(countdownInterval);
+            }
             // Centrowanie widoku na podświetlonej komórce na urządzeniach mobilnych
             if (window.innerWidth <= 640) {
                 const highlightedCell = table.querySelector('.current-time-highlight');
@@ -339,6 +366,7 @@
                 await loadPlanAndComparisons(lastSelectedGroup);
             }
         });
+        setInterval(highlightCurrentTimeSlot, 60000);
     </script>
 </body>
 </html>
