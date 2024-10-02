@@ -80,31 +80,69 @@
         }
 
         function highlightCurrentTimeSlot() {
+            console.log("Rozpoczęcie funkcji highlightCurrentTimeSlot");
             const now = new Date();
+            const currentDay = now.getDay(); // 0 - niedziela, 1 - poniedziałek, ..., 6 - sobota
             const currentHour = now.getHours();
             const currentMinute = now.getMinutes();
             const currentTime = currentHour * 60 + currentMinute;
+            console.log(`Aktualny czas: ${currentHour}:${currentMinute}, dzień tygodnia: ${currentDay}`);
 
-            const timeSlots = document.querySelectorAll('#plan-content table tr td:first-child');
-            timeSlots.forEach(slot => {
-                const timeRange = slot.textContent.split('-');
-                if (timeRange.length === 2) {
-                    const [startTime, endTime] = timeRange.map(time => {
-                        const [hours, minutes] = time.trim().split(':').map(Number);
-                        return hours * 60 + minutes;
-                    });
+            const table = document.querySelector('#plan-content table');
+            if (!table) {
+                console.log("Nie znaleziono tabeli z planem lekcji");
+                return;
+            }
 
-                    if (currentTime >= startTime && currentTime < endTime) {
-                        slot.parentElement.querySelectorAll('td').forEach(cell => {
-                            cell.classList.add('current-time-highlight');
-                        });
-                    } else {
-                        slot.parentElement.querySelectorAll('td').forEach(cell => {
-                            cell.classList.remove('current-time-highlight');
-                        });
-                    }
+            const rows = table.querySelectorAll('tr');
+            const dayNames = ['Niedziela', 'Poniedziałek', 'Wtorek', 'Środa', 'Czwartek', 'Piątek', 'Sobota'];
+            let currentDayColumn = -1;
+
+            // Znajdź kolumnę odpowiadającą aktualnemu dniu tygodnia
+            const headerRow = rows[0];
+            headerRow.querySelectorAll('th').forEach((th, index) => {
+                if (th.textContent.trim() === dayNames[currentDay]) {
+                    currentDayColumn = index;
+                    console.log(`Znaleziono kolumnę dla ${dayNames[currentDay]}: ${currentDayColumn}`);
                 }
             });
+
+            if (currentDayColumn === -1) {
+                console.log("Nie znaleziono kolumny dla aktualnego dnia tygodnia");
+                return;
+            }
+
+            // Usuń poprzednie podświetlenie
+            table.querySelectorAll('.current-time-highlight').forEach(cell => {
+                cell.classList.remove('current-time-highlight');
+            });
+
+            // Sprawdź każdy wiersz z godziną (pomijając nagłówek)
+            for (let i = 1; i < rows.length; i++) {
+                const timeCell = rows[i].querySelector('td:first-child');
+                if (!timeCell) continue;
+
+                const timeRange = timeCell.textContent.split('-');
+                if (timeRange.length !== 2) continue;
+
+                const [startTime, endTime] = timeRange.map(time => {
+                    const [hours, minutes] = time.trim().split(':').map(Number);
+                    return hours * 60 + minutes;
+                });
+
+                console.log(`Sprawdzanie przedziału: ${timeRange[0]} - ${timeRange[1]}`);
+
+                if (currentTime >= startTime && currentTime < endTime) {
+                    const cellToHighlight = rows[i].querySelectorAll('td')[currentDayColumn];
+                    if (cellToHighlight) {
+                        cellToHighlight.classList.add('current-time-highlight');
+                        console.log(`Podświetlono komórkę: rząd ${i}, kolumna ${currentDayColumn}`);
+                    } else {
+                        console.log(`Nie znaleziono komórki do podświetlenia: rząd ${i}, kolumna ${currentDayColumn}`);
+                    }
+                    break;
+                }
+            }
         }
 
         async function loadPlanAndComparisons(selectedGroup) {
@@ -128,6 +166,7 @@
                     
                     planContainer.classList.remove('hidden');
 
+                    console.log("Plan lekcji załadowany, rozpoczęcie podświetlania");
                     highlightCurrentTimeSlot();
                     setInterval(highlightCurrentTimeSlot, 60000); // Update every minute
 
