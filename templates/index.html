@@ -67,8 +67,17 @@
             'bg-pink-50 border-pink-200 text-pink-800'
         ];
 
-        groupSelect.addEventListener('change', async (event) => {
-            const selectedGroup = event.target.value;
+        // Function to save the selected group
+        function saveSelectedGroup(group) {
+            localStorage.setItem('selectedGroup', group);
+        }
+
+        // Function to load the selected group
+        function loadSelectedGroup() {
+            return localStorage.getItem('selectedGroup');
+        }
+
+        async function loadPlanAndComparisons(selectedGroup) {
             if (selectedGroup) {
                 try {
                     // Pobierz plan lekcji
@@ -103,7 +112,6 @@
                                 <h3 class="text-xl font-semibold mb-3">Porównanie z ${new Date(comparison.timestamp).toLocaleString()}</h3>
                                 <p class="mb-1"><strong>Nowszy plan:</strong> ${new Date(comparison.newer_plan_timestamp).toLocaleString()}</p>
                                 <p class="mb-1"><strong>Starszy plan:</strong> ${new Date(comparison.older_plan_timestamp).toLocaleString()}</p>
-                                <p class="mb-3"><strong>Model:</strong> ${comparison.model_used}</p>
                                 <div class="mt-3">
                                     <h4 class="font-semibold mb-2">Zmiany:</h4>
                                     <p>${comparison.results[selectedGroup]}</p>
@@ -123,6 +131,21 @@
             } else {
                 planContainer.classList.add('hidden');
                 comparisonsContainer.innerHTML = '';
+            }
+        }
+
+        groupSelect.addEventListener('change', async (event) => {
+            const selectedGroup = event.target.value;
+            saveSelectedGroup(selectedGroup);
+            await loadPlanAndComparisons(selectedGroup);
+        });
+
+        // Load the last selected group on page load
+        window.addEventListener('DOMContentLoaded', async () => {
+            const lastSelectedGroup = loadSelectedGroup();
+            if (lastSelectedGroup) {
+                groupSelect.value = lastSelectedGroup;
+                await loadPlanAndComparisons(lastSelectedGroup);
             }
         });
     </script>
