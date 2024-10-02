@@ -27,14 +27,25 @@
             print-color-adjust: exact;
         }
         .current-time-highlight {
-            background-color: #FFFF00 !important;
-            font-weight: bold;
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0% {
+                background-color: rgba(255, 255, 0, 0.1);
+            }
+            50% {
+                background-color: rgba(255, 255, 0, 0.3);
+            }
+            100% {
+                background-color: rgba(255, 255, 0, 0.1);
+            }
         }
     </style>
 </head>
 <body class="min-h-screen font-sans text-gray-800">
     <div class="container mx-auto px-4 py-12">
-        <h1 class="text-5xl font-extrabold mb-12 text-center text-gray-700">Plan Lekcji</h1>
+        <h1 class="text-5xl font-extrabold mb-6 text-center text-gray-700">Plan Lekcji</h1>
+        <div id="current-lesson-info" class="mb-6 p-4 bg-white rounded-lg shadow-md text-center"></div>
         <div class="mb-8 max-w-md mx-auto">
             <label for="group-select" class="block text-lg font-medium text-gray-700 mb-2">Wybierz grupę:</label>
             <select id="group-select" class="custom-select block w-full px-4 py-3 text-base border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 rounded-lg shadow-sm bg-white">
@@ -84,6 +95,11 @@
             const minutes = timeString % 100;
             return hours * 60 + minutes;
         }
+        function formatMinutesToTime(minutes) {
+            const hours = Math.floor(minutes / 60);
+            const mins = minutes % 60;
+            return `${hours.toString().padStart(2, '0')}:${mins.toString().padStart(2, '0')}`;
+        }
 
         function highlightCurrentTimeSlot() {
             console.log("Rozpoczęcie funkcji highlightCurrentTimeSlot");
@@ -123,6 +139,9 @@
                 cell.classList.remove('current-time-highlight');
             });
 
+            let currentLessonInfo = "Brak zajęć";
+            let nextLessonInfo = "";
+
             // Sprawdź każdy wiersz z godziną (pomijając nagłówek)
             for (let i = 1; i < rows.length; i++) {
                 const timeCell = rows[i].querySelector('td:first-child');
@@ -142,12 +161,32 @@
                     if (cellToHighlight) {
                         cellToHighlight.classList.add('current-time-highlight');
                         console.log(`Podświetlono komórkę: rząd ${i}, kolumna ${currentDayColumn}`);
+                        const lessonName = cellToHighlight.textContent.trim();
+                        const timeToEnd = endTime - currentTime;
+                        currentLessonInfo = `Aktualna lekcja: ${lessonName}<br>Koniec za: ${formatMinutesToTime(timeToEnd)}`;
                     } else {
                         console.log(`Nie znaleziono komórki do podświetlenia: rząd ${i}, kolumna ${currentDayColumn}`);
+                    }
+                    
+                    // Sprawdź następną lekcję
+                    if (i + 1 < rows.length) {
+                        const nextTimeCell = rows[i + 1].querySelector('td:first-child');
+                        if (nextTimeCell) {
+                            const nextTimeRange = nextTimeCell.textContent.split('-');
+                            if (nextTimeRange.length === 2) {
+                                const nextStartTime = convertTimeToMinutes(parseInt(nextTimeRange[0].trim()));
+                                const breakTime = nextStartTime - endTime;
+                                nextLessonInfo = `Przerwa: ${formatMinutesToTime(breakTime)}`;
+                            }
+                        }
                     }
                     break;
                 }
             }
+
+            // Aktualizuj pole informacyjne
+            const infoElement = document.getElementById('current-lesson-info');
+            infoElement.innerHTML = `${currentLessonInfo}<br>${nextLessonInfo}`;
         }
 
         async function loadPlanAndComparisons(selectedGroup) {
