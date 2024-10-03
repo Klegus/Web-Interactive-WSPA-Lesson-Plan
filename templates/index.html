@@ -91,30 +91,26 @@
             border-radius: 50%;
             background-color: #10B981;
             position: relative;
+            overflow: hidden;
         }
 
         .server-status-indicator::before {
             content: '';
             position: absolute;
-            top: 50%;
-            left: 50%;
-            width: 25px;
-            height: 25px;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(255, 255, 255, 0.5);
             border-radius: 50%;
-            background-color: rgba(16, 185, 129, 0.3);
-            transform: translate(-50%, -50%);
         }
 
         .server-status-indicator.active::before {
-            animation: pulse-large 2s infinite;
+            animation: pulse-inner 2s infinite;
         }
 
         .server-status-indicator.inactive {
             background-color: #EF4444;
-        }
-
-        .server-status-indicator.inactive::before {
-            background-color: rgba(239, 68, 68, 0.3);
         }
 
         .server-status-text {
@@ -125,7 +121,7 @@
         .server-status-tooltip {
             visibility: hidden;
             position: absolute;
-            bottom: 125%;
+            top: 100%;
             left: 50%;
             transform: translateX(-50%);
             background-color: #333;
@@ -135,7 +131,19 @@
             border-radius: 6px;
             white-space: nowrap;
             opacity: 0;
-            transition: opacity 0.3s;
+            transition: opacity 0.3s, visibility 0.3s;
+            margin-top: 10px;
+        }
+
+        .server-status-tooltip::before {
+            content: '';
+            position: absolute;
+            bottom: 100%;
+            left: 50%;
+            border-width: 5px;
+            border-style: solid;
+            border-color: transparent transparent #333 transparent;
+            transform: translateX(-50%);
         }
 
         .server-status-container:hover .server-status-tooltip {
@@ -143,18 +151,15 @@
             opacity: 1;
         }
 
-        @keyframes pulse-large {
+        @keyframes pulse-inner {
             0% {
-                transform: translate(-50%, -50%) scale(1);
-                opacity: 0.7;
+                box-shadow: inset 0 0 0 0 rgba(255, 255, 255, 0.7);
             }
             50% {
-                transform: translate(-50%, -50%) scale(1.5);
-                opacity: 0.3;
+                box-shadow: inset 0 0 0 10px rgba(255, 255, 255, 0);
             }
             100% {
-                transform: translate(-50%, -50%) scale(1);
-                opacity: 0.7;
+                box-shadow: inset 0 0 0 0 rgba(255, 255, 255, 0.7);
             }
         }
     </style>
