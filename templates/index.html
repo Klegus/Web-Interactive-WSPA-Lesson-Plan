@@ -72,9 +72,45 @@
             font-weight: bold;
             color: #4a5568;
         }
+        .server-status-indicator {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            width: 15px;
+            height: 15px;
+            border-radius: 50%;
+            background-color: #10B981;
+            box-shadow: 0 0 10px rgba(16, 185, 129, 0.7);
+            transition: all 0.3s ease;
+        }
+
+        .server-status-indicator.active {
+            animation: pulse 2s infinite;
+        }
+
+        .server-status-indicator.inactive {
+            background-color: #EF4444;
+            box-shadow: 0 0 10px rgba(239, 68, 68, 0.7);
+        }
+
+        @keyframes pulse {
+            0% {
+                transform: scale(1);
+                opacity: 1;
+            }
+            50% {
+                transform: scale(1.1);
+                opacity: 0.7;
+            }
+            100% {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
     </style>
 </head>
 <body class="min-h-screen font-sans text-gray-800">
+    <div class="server-status-indicator" id="serverStatusIndicator"></div>
     <div class="container mx-auto px-4 py-12">
         <h1 class="text-5xl font-extrabold mb-6 text-center text-gray-700">Plan Lekcji</h1>
         <div id="current-lesson-info" class="mb-6 p-4 bg-white rounded-lg shadow-md text-center"></div>
@@ -368,7 +404,30 @@
                 await loadPlanAndComparisons(lastSelectedGroup);
             }
         });
+        
+        async function checkServerStatus() {
+            const indicator = document.getElementById('serverStatusIndicator');
+            try {
+                const response = await axios.get('/api/status');
+                if (response.data.status === 'active') {
+                    indicator.classList.add('active');
+                    indicator.classList.remove('inactive');
+                } else {
+                    indicator.classList.remove('active');
+                    indicator.classList.add('inactive');
+                }
+            } catch (error) {
+                console.error('Error checking server status:', error);
+                indicator.classList.remove('active');
+                indicator.classList.add('inactive');
+            }
+        }
+
+        // Check server status every second
+        setInterval(checkServerStatus, 1000);
         setInterval(highlightCurrentTimeSlot, 60000);
+        // Initial check when the page loads
+        window.addEventListener('DOMContentLoaded', checkServerStatus);
     </script>
 </body>
 </html>
