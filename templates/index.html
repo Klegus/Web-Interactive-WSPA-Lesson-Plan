@@ -286,129 +286,125 @@
             return `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
         }
 
-        function highlightCurrentTimeSlot() {
-            console.log("Rozpoczęcie funkcji highlightCurrentTimeSlot");
-            const now = new Date();
-            const currentDay = now.getDay();
-            const currentHour = now.getHours();
-            const currentMinute = now.getMinutes();
-            const currentTime = currentHour * 60 + currentMinute;
-            console.log(`Aktualny czas: ${currentHour}:${currentMinute}, dzień tygodnia: ${currentDay}`);
+            function highlightCurrentTimeSlot() {
+    console.log("Rozpoczęcie funkcji highlightCurrentTimeSlot");
+    const now = new Date();
+    const currentDay = now.getDay();
+    const currentTime = now.getHours() * 60 + now.getMinutes();
+    console.log(`Aktualny czas: ${now.getHours()}:${now.getMinutes()}, dzień tygodnia: ${currentDay}`);
 
-            const table = document.querySelector('#plan-content table');
-            if (!table) {
-                console.log("Nie znaleziono tabeli z planem lekcji");
-                return;
-            }
+    const table = document.querySelector('#plan-content table');
+    if (!table) {
+        console.log("Nie znaleziono tabeli z planem lekcji");
+        return;
+    }
 
-            const rows = table.querySelectorAll('tr');
-            const dayNames = ['Niedziela', 'Poniedziałek', 'Wtorek', 'Środa', 'Czwartek', 'Piątek', 'Sobota'];
-            let currentDayColumn = -1;
+    const rows = table.querySelectorAll('tr');
+    const dayNames = ['Niedziela', 'Poniedziałek', 'Wtorek', 'Środa', 'Czwartek', 'Piątek', 'Sobota'];
+    let currentDayColumn = -1;
 
-            const headerRow = rows[0];
-            headerRow.querySelectorAll('th').forEach((th, index) => {
-                if (th.textContent.trim() === dayNames[currentDay]) {
-                    currentDayColumn = index;
-                    console.log(`Znaleziono kolumnę dla ${dayNames[currentDay]}: ${currentDayColumn}`);
-                }
-            });
+    const headerRow = rows[0];
+    headerRow.querySelectorAll('th').forEach((th, index) => {
+        if (th.textContent.trim() === dayNames[currentDay]) {
+            currentDayColumn = index;
+            console.log(`Znaleziono kolumnę dla ${dayNames[currentDay]}: ${currentDayColumn}`);
+        }
+    });
 
-            if (currentDayColumn === -1) {
-                console.log("Nie znaleziono kolumny dla aktualnego dnia tygodnia");
-                return;
-            }
+    if (currentDayColumn === -1) {
+        console.log("Nie znaleziono kolumny dla aktualnego dnia tygodnia");
+        return;
+    }
 
-            table.querySelectorAll('.current-time-highlight').forEach(cell => {
-                cell.classList.remove('current-time-highlight');
-            });
+    table.querySelectorAll('.current-time-highlight').forEach(cell => {
+        cell.classList.remove('current-time-highlight');
+    });
 
-            let currentLessonInfo = "";
-            let nextLessonInfo = "";
-            let isBreak = false;
-            let breakEndTime = 0;
+    let currentLessonInfo = "";
+    let nextLessonInfo = "";
+    let isBreak = false;
+    let breakEndTime = 0;
 
-            if (currentDay === 0 || currentDay === 6) {
-                currentLessonInfo = "Weekend! Czas na relaks i zabawę! 🎉";
-            } else {
-                for (let i = 1; i < rows.length; i++) {
-                    const timeCell = rows[i].querySelector('td:first-child');
-                    if (!timeCell) continue;
+    if (currentDay === 0 || currentDay === 6) {
+        currentLessonInfo = "Weekend! Czas na relaks i zabawę! 🎉";
+    } else {
+        for (let i = 1; i < rows.length; i++) {
+            const timeCell = rows[i].querySelector('td:first-child');
+            if (!timeCell) continue;
 
-                    const timeRange = timeCell.textContent.replace(/<[^>]*>/g, '').split('-');
-                    if (timeRange.length !== 2) continue;
+            const timeRange = timeCell.textContent.replace(/<[^>]*>/g, '').split('-');
+            if (timeRange.length !== 2) continue;
 
-                    const startTime = convertTimeToMinutes(timeRange[0].trim());
-                    const endTime = convertTimeToMinutes(timeRange[1].trim());
+            const startTime = convertTimeToMinutes(timeRange[0].trim());
+            const endTime = convertTimeToMinutes(timeRange[1].trim());
 
-                    console.log(`Sprawdzanie przedziału: ${timeRange[0].trim()} - ${timeRange[1].trim()}`);
-                    console.log(`Przekonwertowany czas: ${startTime} - ${endTime}`);
+            console.log(`Sprawdzanie przedziału: ${timeRange[0].trim()} - ${timeRange[1].trim()}`);
+            console.log(`Przekonwertowany czas: ${startTime} - ${endTime}`);
 
-                    if (currentTime >= startTime && currentTime < endTime) {
-                        const cellToHighlight = rows[i].querySelectorAll('td')[currentDayColumn];
-                        if (cellToHighlight) {
-                            cellToHighlight.classList.add('current-time-highlight');
-                            console.log(`Podświetlono komórkę: rząd ${i}, kolumna ${currentDayColumn}`);
-                            const lessonName = cellToHighlight.textContent.trim();
-                            const timeToEnd = endTime - currentTime;
-                            currentLessonInfo = lessonName ? 
-                                `Aktualna lekcja: ${lessonName}<br>Koniec za: ${formatMinutesToTime(timeToEnd)}` :
-                                "Czas wolny!";
-                            
-                            // Check for next lesson
-                            if (i < rows.length - 1) {
-                                const nextCell = rows[i+1].querySelectorAll('td')[currentDayColumn];
-                                if (nextCell) {
-                                    const nextLessonName = nextCell.textContent.trim();
-                                    const nextStartTime = convertTimeToMinutes(rows[i+1].querySelector('td:first-child').textContent.replace(/<[^>]*>/g, '').split('-')[0].trim());
-                                    nextLessonInfo = nextLessonName ? 
-                                        `Następna lekcja: ${nextLessonName}<br>Rozpoczyna się o: ${formatMinutesToTime(nextStartTime)}` :
-                                        "Brak następnych lekcji";
-                                }
-                            }
-                        } else {
-                            console.log(`Nie znaleziono komórki do podświetlenia: rząd ${i}, kolumna ${currentDayColumn}`);
+            if (currentTime >= startTime && currentTime < endTime) {
+                const cellToHighlight = rows[i].querySelectorAll('td')[currentDayColumn];
+                if (cellToHighlight) {
+                    cellToHighlight.classList.add('current-time-highlight');
+                    console.log(`Podświetlono komórkę: rząd ${i}, kolumna ${currentDayColumn}`);
+                    const lessonName = cellToHighlight.textContent.trim();
+                    const timeToEnd = endTime - currentTime;
+                    currentLessonInfo = lessonName ? 
+                        `Aktualna lekcja: ${lessonName}<br>Koniec za: ${formatMinutesToTime(timeToEnd)}` :
+                        "Czas wolny!";
+                    
+                    // Check for next lesson
+                    if (i < rows.length - 1) {
+                        const nextCell = rows[i+1].querySelectorAll('td')[currentDayColumn];
+                        if (nextCell) {
+                            const nextLessonName = nextCell.textContent.trim();
+                            const nextStartTime = convertTimeToMinutes(rows[i+1].querySelector('td:first-child').textContent.replace(/<[^>]*>/g, '').split('-')[0].trim());
+                            nextLessonInfo = nextLessonName ? 
+                                `Następna lekcja: ${nextLessonName}<br>Rozpoczyna się o: ${formatMinutesToTime(nextStartTime)}` :
+                                "Brak następnych lekcji";
                         }
-                        break;
-                    } else if (i > 1) {
-                        const prevEndTime = convertTimeToMinutes(rows[i-1].querySelector('td:first-child').textContent.replace(/<[^>]*>/g, '').split('-')[1].trim());
-                        if (currentTime >= prevEndTime && currentTime < startTime) {
-                            isBreak = true;
-                            breakEndTime = startTime;
-                            const breakDuration = startTime - currentTime;
-                            currentLessonInfo = `Trwa przerwa!<br>Do końca przerwy: <span id="countdown">${formatTimeToDisplay(Math.floor(breakDuration), Math.floor((breakDuration % 1) * 60))}</span>`;
-                            
-                            // Add next lesson info
-                            const nextCell = rows[i].querySelectorAll('td')[currentDayColumn];
-                            if (nextCell) {
-                                const nextLessonName = nextCell.textContent.trim();
-                                nextLessonInfo = nextLessonName ? 
-                                    `Następna lekcja: ${nextLessonName}<br>Rozpoczyna się o: ${formatMinutesToTime(startTime)}` :
-                                    "Brak następnych lekcji";
-                            }
-                        }
-                            break;
                     }
+                } else {
+                    console.log(`Nie znaleziono komórki do podświetlenia: rząd ${i}, kolumna ${currentDayColumn}`);
                 }
-                if (!currentLessonInfo) {
-                    currentLessonInfo = "Brak lekcji.";
+                break;
+            } else if (i > 1 && currentTime >= convertTimeToMinutes(rows[i-1].querySelector('td:first-child').textContent.replace(/<[^>]*>/g, '').split('-')[1].trim()) && currentTime < startTime) {
+                isBreak = true;
+                breakEndTime = startTime;
+                const breakDuration = startTime - currentTime;
+                currentLessonInfo = `Trwa przerwa!<br>Do końca przerwy: <span id="countdown">${formatTimeToDisplay(Math.floor(breakDuration), Math.floor((breakDuration % 1) * 60))}</span>`;
+                
+                // Add next lesson info
+                const nextCell = rows[i].querySelectorAll('td')[currentDayColumn];
+                if (nextCell) {
+                    const nextLessonName = nextCell.textContent.trim();
+                    nextLessonInfo = nextLessonName ? 
+                        `Następna lekcja: ${nextLessonName}<br>Rozpoczyna się o: ${formatMinutesToTime(startTime)}` :
+                        "Brak następnych lekcji";
                 }
-            }
-
-            const infoElement = document.getElementById('current-lesson-info');
-            infoElement.innerHTML = `${currentLessonInfo}<br>${nextLessonInfo}`;
-            if (!isBreak) {
-                startCountdown(breakEndTime);
-            }else {
-                clearInterval(countdownInterval);
-            }
-            
-            if (window.innerWidth <= 640) {
-                const highlightedCell = table.querySelector('.current-time-highlight');
-                if (highlightedCell) {
-                    highlightedCell.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'center' });
-                }
+                break;
             }
         }
+        if (!currentLessonInfo) {
+            currentLessonInfo = "Brak lekcji.";
+        }
+    }
+
+    const infoElement = document.getElementById('current-lesson-info');
+    infoElement.innerHTML = `${currentLessonInfo}<br>${nextLessonInfo}`;
+
+    if (isBreak) {
+        startCountdown(breakEndTime);
+    } else {
+        clearInterval(countdownInterval);
+    }
+    
+    if (window.innerWidth <= 640) {
+        const highlightedCell = table.querySelector('.current-time-highlight');
+        if (highlightedCell) {
+            highlightedCell.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'center' });
+        }
+    }
+}
 
         async function loadPlanAndComparisons(selectedGroup) {
             if (selectedGroup) {
@@ -519,9 +515,16 @@
 
         // Check server status every second
         setInterval(checkServerStatus, 1000);
-        setInterval(highlightCurrentTimeSlot, 60000);
         // Initial check when the page loads
-        window.addEventListener('DOMContentLoaded', checkServerStatus);
+        window.addEventListener('DOMContentLoaded', async () => {
+            const lastSelectedGroup = loadSelectedGroup();
+            if (lastSelectedGroup) {
+                groupSelect.value = lastSelectedGroup;
+                await loadPlanAndComparisons(lastSelectedGroup);
+            }
+            checkServerStatus();
+        });
+        
     </script>
 </body>
 </html>
