@@ -72,45 +72,99 @@
             font-weight: bold;
             color: #4a5568;
         }
-        .server-status-indicator {
+        .server-status-container {
             position: fixed;
             top: 20px;
             right: 20px;
+            display: flex;
+            align-items: center;
+            padding: 10px;
+            background-color: rgba(255, 255, 255, 0.8);
+            border-radius: 20px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            z-index: 1000;
+        }
+
+        .server-status-indicator {
             width: 15px;
             height: 15px;
             border-radius: 50%;
             background-color: #10B981;
-            box-shadow: 0 0 10px rgba(16, 185, 129, 0.7);
-            transition: all 0.3s ease;
+            position: relative;
         }
 
-        .server-status-indicator.active {
-            animation: pulse 2s infinite;
+        .server-status-indicator::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 25px;
+            height: 25px;
+            border-radius: 50%;
+            background-color: rgba(16, 185, 129, 0.3);
+            transform: translate(-50%, -50%);
+        }
+
+        .server-status-indicator.active::before {
+            animation: pulse-large 2s infinite;
         }
 
         .server-status-indicator.inactive {
             background-color: #EF4444;
-            box-shadow: 0 0 10px rgba(239, 68, 68, 0.7);
         }
 
-        @keyframes pulse {
+        .server-status-indicator.inactive::before {
+            background-color: rgba(239, 68, 68, 0.3);
+        }
+
+        .server-status-text {
+            margin-left: 10px;
+            font-weight: bold;
+        }
+
+        .server-status-tooltip {
+            visibility: hidden;
+            position: absolute;
+            bottom: 125%;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: #333;
+            color: #fff;
+            text-align: center;
+            padding: 5px 10px;
+            border-radius: 6px;
+            white-space: nowrap;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .server-status-container:hover .server-status-tooltip {
+            visibility: visible;
+            opacity: 1;
+        }
+
+        @keyframes pulse-large {
             0% {
-                transform: scale(1);
-                opacity: 1;
-            }
-            50% {
-                transform: scale(1.1);
+                transform: translate(-50%, -50%) scale(1);
                 opacity: 0.7;
             }
+            50% {
+                transform: translate(-50%, -50%) scale(1.5);
+                opacity: 0.3;
+            }
             100% {
-                transform: scale(1);
-                opacity: 1;
+                transform: translate(-50%, -50%) scale(1);
+                opacity: 0.7;
             }
         }
     </style>
 </head>
 <body class="min-h-screen font-sans text-gray-800">
+    <div class="server-status-container">
     <div class="server-status-indicator" id="serverStatusIndicator"></div>
+    <span class="server-status-text" id="serverStatusText">Łączenie...</span>
+    <div class="server-status-tooltip" id="serverStatusTooltip"></div>
+</div>
     <div class="container mx-auto px-4 py-12">
         <h1 class="text-5xl font-extrabold mb-6 text-center text-gray-700">Plan Lekcji</h1>
         <div id="current-lesson-info" class="mb-6 p-4 bg-white rounded-lg shadow-md text-center"></div>
@@ -159,9 +213,9 @@
         }
         function startCountdown(endTime) {
             clearInterval(countdownInterval);
-            const countdownElement = document.getElementById('countdown');
+            const infoElement = document.getElementById('current-lesson-info');
             
-            countdownInterval = setInterval(() => {
+            function updateCountdown() {
                 const now = new Date();
                 const currentTime = now.getHours() * 60 + now.getMinutes();
                 const timeLeft = endTime - currentTime;
@@ -174,8 +228,19 @@
                 
                 const minutes = Math.floor(timeLeft);
                 const seconds = Math.floor((timeLeft - minutes) * 60);
-                countdownElement.textContent = formatTimeToDisplay(minutes, seconds);
-            }, 1000);
+                const countdownText = formatTimeToDisplay(minutes, seconds);
+                
+                // Aktualizuj tylko część z odliczaniem
+                const currentContent = infoElement.innerHTML;
+                const updatedContent = currentContent.replace(
+                    /Do końca przerwy: <span id="countdown">.*?<\/span>/,
+                    `Do końca przerwy: <span id="countdown">${countdownText}</span>`
+                );
+                infoElement.innerHTML = updatedContent;
+            }
+            
+            updateCountdown(); // Natychmiastowa aktualizacja
+            countdownInterval = setInterval(updateCountdown, 1000);
         }
         function convertTimeToMinutes(timeString) {
             // Usuwamy znaczniki HTML i dodatkowe spacje
@@ -320,10 +385,8 @@
                                     `Następna lekcja: ${nextLessonName}<br>Rozpoczyna się o: ${formatMinutesToTime(startTime)}` :
                                     "Brak następnych lekcji";
                             }
-                            
-                            startCountdown(startTime);
-                            break;
                         }
+                            break;
                     }
                 }
                 if (!currentLessonInfo) {
@@ -334,6 +397,8 @@
             const infoElement = document.getElementById('current-lesson-info');
             infoElement.innerHTML = `${currentLessonInfo}<br>${nextLessonInfo}`;
             if (!isBreak) {
+                startCountdown(breakEndTime);
+            }else {
                 clearInterval(countdownInterval);
             }
             
@@ -422,22 +487,33 @@
                 await loadPlanAndComparisons(lastSelectedGroup);
             }
         });
-        
+        let lastUpdateTime = null;
         async function checkServerStatus() {
             const indicator = document.getElementById('serverStatusIndicator');
+            const statusText = document.getElementById('serverStatusText');
+            const tooltip = document.getElementById('serverStatusTooltip');
             try {
                 const response = await axios.get('/api/status');
                 if (response.data.status === 'active') {
                     indicator.classList.add('active');
                     indicator.classList.remove('inactive');
+                    statusText.textContent = 'Online';
+                    statusText.style.color = '#10B981';
                 } else {
                     indicator.classList.remove('active');
                     indicator.classList.add('inactive');
+                    statusText.textContent = 'Offline';
+                    statusText.style.color = '#EF4444';
                 }
+                lastUpdateTime = new Date(response.data.last_check);
+                tooltip.textContent = `Ostatnia aktualizacja: ${lastUpdateTime.toLocaleString()}`;
             } catch (error) {
                 console.error('Error checking server status:', error);
                 indicator.classList.remove('active');
                 indicator.classList.add('inactive');
+                statusText.textContent = 'Błąd połączenia';
+                statusText.style.color = '#EF4444';
+                tooltip.textContent = 'Nie można połączyć się z serwerem';
             }
         }
 
