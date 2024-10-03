@@ -74,5 +74,18 @@ async def get_comparisons(group_name: str):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
+@app.get("/api/status")
+async def get_status():
+    try:
+        async with httpx.AsyncClient() as client:
+            response = await client.get("http://3.78.248.208/statusa")
+        
+        if response.status_code == 200:
+            return response.json()
+        else:
+            raise HTTPException(status_code=response.status_code, detail="Failed to fetch status")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
 # Handler dla AWS Lambda
 handler = Mangum(app)
