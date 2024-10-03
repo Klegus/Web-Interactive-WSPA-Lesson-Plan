@@ -1,6 +1,7 @@
 # Plik: main.py
 
 import os
+import httpx
 from fastapi import FastAPI, Request, HTTPException
 from fastapi.templating import Jinja2Templates
 from fastapi.staticfiles import StaticFiles
