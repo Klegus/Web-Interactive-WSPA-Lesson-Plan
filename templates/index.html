@@ -223,7 +223,7 @@
             if (minutes > 0) result += `${minutes} ${minutes === 1 ? 'minuta' : 'minut'} `;
             if (result === '') result = 'mniej niż minutę ';
 
-            return result.trim() + 'temu';
+            return result.trim() + ' temu';
         }
 
         function saveSelectedGroup(group) {
@@ -437,7 +437,7 @@
                     groupNameElement.textContent = group_name;
                     const updateTime = new Date(timestamp);
                     const timeSince = timeSinceUpdate(timestamp);
-                    planDateElement.textContent = `Data ostatniej zmiany plany: ${updateTime.toLocaleString()} (${timeSince})`;
+                    planDateElement.textContent = `Data ostatniej zmiany planu: ${updateTime.toLocaleString()} (${timeSince})`;
                     planContentElement.innerHTML = plan_html;
                     
                     const table = planContentElement.querySelector('table');
