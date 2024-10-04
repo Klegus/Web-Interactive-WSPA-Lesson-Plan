@@ -208,6 +208,23 @@
             'bg-purple-50 border-purple-200 text-purple-800',
             'bg-pink-50 border-pink-200 text-pink-800'
         ];
+        function timeSinceUpdate(timestamp) {
+            const now = new Date();
+            const updateTime = new Date(timestamp);
+            const diffInSeconds = Math.floor((now - updateTime) / 1000);
+
+            const days = Math.floor(diffInSeconds / 86400);
+            const hours = Math.floor((diffInSeconds % 86400) / 3600);
+            const minutes = Math.floor((diffInSeconds % 3600) / 60);
+
+            let result = '';
+            if (days > 0) result += `${days} ${days === 1 ? 'dzień' : 'dni'} `;
+            if (hours > 0) result += `${hours} ${hours === 1 ? 'godzina' : 'godzin'} `;
+            if (minutes > 0) result += `${minutes} ${minutes === 1 ? 'minuta' : 'minut'} `;
+            if (result === '') result = 'mniej niż minutę ';
+
+            return result.trim() + 'temu';
+        }
 
         function saveSelectedGroup(group) {
             localStorage.setItem('selectedGroup', group);
@@ -418,7 +435,9 @@
                     const { group_name, plan_html, timestamp } = planResponse.data;
                     
                     groupNameElement.textContent = group_name;
-                    planDateElement.textContent = `Data: ${new Date(timestamp).toLocaleString()}`;
+                    const updateTime = new Date(timestamp);
+                    const timeSince = timeSinceUpdate(timestamp);
+                    planDateElement.textContent = `Data ostatniej zmiany plany: ${updateTime.toLocaleString()} (${timeSince})`;
                     planContentElement.innerHTML = plan_html;
                     
                     const table = planContentElement.querySelector('table');
@@ -464,7 +483,7 @@
                         comparisonsContainer.innerHTML = '<p class="text-xl text-center text-gray-600">Brak zmian w ostatnich porównaniach.</p>';
                     }
 
-                } catch (error) {
+                        } catch (error) {
                     console.error('Błąd podczas pobierania danych:', error);
                     planContainer.classList.add('hidden');
                     comparisonsContainer.innerHTML = '<p class="text-xl text-center text-red-600">Wystąpił błąd podczas pobierania danych.</p>';
@@ -474,7 +493,12 @@
                 comparisonsContainer.innerHTML = '';
             }
         }
-
+        function updateTimeSinceLastUpdate() {
+            const timestampStr = planDateElement.textContent.split(': ')[1].split(' (')[0];
+            const timestamp = new Date(timestampStr);
+            const timeSince = timeSinceUpdate(timestamp);
+            planDateElement.textContent = `Data: ${timestamp.toLocaleString()} (${timeSince})`;
+        }
         groupSelect.addEventListener('change', async (event) => {
             const selectedGroup = event.target.value;
             saveSelectedGroup(selectedGroup);
@@ -486,7 +510,10 @@
             if (lastSelectedGroup) {
                 groupSelect.value = lastSelectedGroup;
                 await loadPlanAndComparisons(lastSelectedGroup);
+                // Aktualizuj czas co minutę
+                setInterval(updateTimeSinceLastUpdate, 60000);
             }
+            checkServerStatus();
         });
         let lastUpdateTime = null;
         async function checkServerStatus() {
