@@ -184,6 +184,7 @@
         </div>
         <div id="plan-container" class="bg-white p-8 rounded-lg shadow-lg mb-12 hidden">
             <h2 id="group-name" class="text-3xl font-bold mb-3 text-gray-800"></h2>
+            <p id="week-range" class="text-xl font-semibold mb-3 text-gray-700"></p>
             <p id="plan-date" class="mb-6 text-gray-600"></p>
             <div id="plan-content" class="overflow-x-auto"></div>
         </div>
@@ -195,10 +196,41 @@
         const groupSelect = document.getElementById('group-select');
         const planContainer = document.getElementById('plan-container');
         const groupNameElement = document.getElementById('group-name');
+        const weekRangeElement = document.getElementById('week-range');
         const planDateElement = document.getElementById('plan-date');
         const planContentElement = document.getElementById('plan-content');
         const comparisonsContainer = document.getElementById('comparisons-container');
         let countdownInterval;
+
+        function getWeekRange(date) {
+            const startOfWeek = new Date(date);
+            startOfWeek.setDate(date.getDate() - date.getDay() + (date.getDay() === 0 ? -6 : 1));
+            const endOfWeek = new Date(startOfWeek);
+            endOfWeek.setDate(startOfWeek.getDate() + 6);
+            return {
+                start: startOfWeek,
+                end: endOfWeek
+            };
+        }
+
+        function formatDate(date) {
+            return date.toLocaleDateString('pl-PL', { day: '2-digit', month: '2-digit', year: 'numeric' });
+        }
+
+        function shouldShowNextWeek() {
+            const now = new Date();
+            const currentDay = now.getDay();
+            const currentHour = now.getHours();
+            return currentDay === 5 && currentHour >= 18; // Piątek po 18:00
+        }
+
+        function getCurrentOrNextWeekRange() {
+            let date = new Date();
+            if (shouldShowNextWeek()) {
+                date.setDate(date.getDate() + 7); // Przejdź do następnego tygodnia
+            }
+            return getWeekRange(date);
+        }
         const colors = [
             'bg-blue-50 border-blue-200 text-blue-800',
             'bg-green-50 border-green-200 text-green-800',
@@ -438,7 +470,13 @@
                     const updateTime = new Date(timestamp);
                     const timeSince = timeSinceUpdate(timestamp);
                     planDateElement.textContent = `Data ostatniej zmiany planu: ${updateTime.toLocaleString()} (${timeSince})`;
-                    planContentElement.innerHTML = plan_html;
+                    
+                    const weekRange = getCurrentOrNextWeekRange();
+                    weekRangeElement.textContent = `Tydzień: ${formatDate(weekRange.start)} - ${formatDate(weekRange.end)}`;
+                    
+                    // Filtruj plan_html, aby pokazać tylko lekcje z bieżącego tygodnia
+                    const filteredPlanHtml = filterPlanForCurrentWeek(plan_html, weekRange);
+                    planContentElement.innerHTML = filteredPlanHtml;
                     
                     const table = planContentElement.querySelector('table');
                     if (table) {
@@ -504,6 +542,28 @@
             saveSelectedGroup(selectedGroup);
             await loadPlanAndComparisons(selectedGroup);
         });
+
+        function filterPlanForCurrentWeek(planHtml, weekRange) {
+            const parser = new DOMParser();
+            const doc = parser.parseFromString(planHtml, 'text/html');
+            const table = doc.querySelector('table');
+            
+            if (!table) return planHtml;
+
+            const rows = table.querySelectorAll('tr');
+            rows.forEach((row, index) => {
+                if (index === 0) return; // Skip header row
+                const dateCell = row.querySelector('td:first-child');
+                if (dateCell) {
+                    const cellDate = new Date(dateCell.textContent.trim());
+                    if (cellDate < weekRange.start || cellDate > weekRange.end) {
+                        row.remove();
+                    }
+                }
+            });
+
+            return table.outerHTML;
+        }
 
         window.addEventListener('DOMContentLoaded', async () => {
             const lastSelectedGroup = loadSelectedGroup();
