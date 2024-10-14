@@ -616,31 +616,18 @@
                     });
                     return;
                 }
-                let shouldKeepRow = false;
                 row.querySelectorAll('td').forEach((cell, cellIndex) => {
                     if (cellIndex === 0) return; // Skip the first column
-                    const cellContent = cell.textContent.trim();
-                    const dateMatches = cellContent.match(/\b(\d{1,2})\.(\d{2})\b/g);
-                    if (dateMatches) {
-                        dateMatches.forEach(match => {
-                            const [day, month] = match.split('.').map(Number);
-                            const year = weekRange.start.getFullYear();
-                            let cellDate = new Date(year, month - 1, day);
-                            
-                            // Adjust for dates that might be in the next year
-                            if (month < weekRange.start.getMonth() + 1) {
-                                cellDate.setFullYear(year + 1);
-                            }
-                            
-                            if (cellDate >= weekRange.start && cellDate <= weekRange.end) {
-                                shouldKeepRow = true;
-                            }
-                        });
+                    const headerCell = rows[0].querySelectorAll('th')[cellIndex];
+                    const headerDateMatch = headerCell.textContent.match(/\b(\d{1,2})\.(\d{2})\b/);
+                    if (headerDateMatch) {
+                        const headerDate = headerDateMatch[0];
+                        const cellContent = cell.textContent.trim();
+                        if (!cellContent.includes(headerDate)) {
+                            cell.textContent = ''; // Clear cell content if date not found
+                        }
                     }
                 });
-                if (!shouldKeepRow) {
-                    row.remove();
-                }
             });
 
             return table.outerHTML;
