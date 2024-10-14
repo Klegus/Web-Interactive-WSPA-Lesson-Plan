@@ -667,7 +667,6 @@
         }
 
         window.addEventListener('DOMContentLoaded', async () => {
-            const filterToggle = document.getElementById('filter-toggle');
             const filterToggleState = getCookie('filterToggle');
             if (filterToggleState !== null) {
                 filterToggle.checked = (filterToggleState === 'true');
@@ -681,7 +680,6 @@
             checkServerStatus();
             
             // Dodaj nasłuchiwanie zdarzeń dla przełącznika filtrowania
-            const filterToggle = document.getElementById('filter-toggle');
             filterToggle.addEventListener('change', toggleFilterPlan);
         });
         let lastUpdateTime = null;
