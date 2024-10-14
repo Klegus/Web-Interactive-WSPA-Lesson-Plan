@@ -247,6 +247,7 @@
         const planContentElement = document.getElementById('plan-content');
         const comparisonsContainer = document.getElementById('comparisons-container');
         let countdownInterval;
+        let lastSelectedGroup = loadSelectedGroup();
 
         function getWeekRange(date) {
             const startOfWeek = new Date(date);
