@@ -660,8 +660,8 @@
         }
 
         function toggleFilterPlan() {
-            setCookie('filterToggle', filterToggle.checked, 7); // Save state for 7 days
-            const filterToggle = document.getElementById('filter-toggle');
+            const isChecked = filterToggle.checked;
+            setCookie('filterToggle', isChecked, 7); // Save state for 7 days
             const selectedGroup = groupSelect.value;
             if (selectedGroup) {
                 loadPlanAndComparisons(selectedGroup);
