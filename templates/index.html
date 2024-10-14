@@ -553,12 +553,20 @@
             const rows = table.querySelectorAll('tr');
             rows.forEach((row, index) => {
                 if (index === 0) return; // Skip header row
-                const dateCell = row.querySelector('td:first-child');
-                if (dateCell) {
-                    const cellDate = new Date(dateCell.textContent.trim());
-                    if (cellDate < weekRange.start || cellDate > weekRange.end) {
-                        row.remove();
+                let shouldKeepRow = false;
+                row.querySelectorAll('td').forEach(cell => {
+                    const cellContent = cell.textContent.trim();
+                    const dateMatch = cellContent.match(/(\d{1,2})\.(\d{1,2})/);
+                    if (dateMatch) {
+                        const [, day, month] = dateMatch;
+                        const cellDate = new Date(weekRange.start.getFullYear(), parseInt(month) - 1, parseInt(day));
+                        if (cellDate >= weekRange.start && cellDate <= weekRange.end) {
+                            shouldKeepRow = true;
+                        }
                     }
+                });
+                if (!shouldKeepRow) {
+                    row.remove();
                 }
             });
 
