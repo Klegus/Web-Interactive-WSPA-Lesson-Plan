@@ -602,10 +602,23 @@
             if (!table) return planHtml;
 
             const rows = table.querySelectorAll('tr');
-            rows.forEach((row, index) => {
-                if (index === 0) return; // Skip header row
+            rows.forEach((row, rowIndex) => {
+                if (rowIndex === 0) {
+                    // Update header row with dates for the current week
+                    const dayCells = row.querySelectorAll('th');
+                    dayCells.forEach((cell, cellIndex) => {
+                        if (cellIndex > 0) { // Skip the first column
+                            const dayOfWeek = weekRange.start.getDay() + cellIndex - 1;
+                            const date = new Date(weekRange.start);
+                            date.setDate(weekRange.start.getDate() + dayOfWeek);
+                            cell.textContent += ` (${formatDate(date).slice(0, 5)})`;
+                        }
+                    });
+                    return;
+                }
                 let shouldKeepRow = false;
-                row.querySelectorAll('td').forEach(cell => {
+                row.querySelectorAll('td').forEach((cell, cellIndex) => {
+                    if (cellIndex === 0) return; // Skip the first column
                     const cellContent = cell.textContent.trim();
                     const dateMatches = cellContent.match(/\b(\d{1,2})\.(\d{2})\b/g);
                     if (dateMatches) {
