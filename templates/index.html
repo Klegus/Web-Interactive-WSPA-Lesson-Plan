@@ -246,6 +246,7 @@
         const planDateElement = document.getElementById('plan-date');
         const planContentElement = document.getElementById('plan-content');
         const comparisonsContainer = document.getElementById('comparisons-container');
+        const filterToggle = document.getElementById('filter-toggle');
         let countdownInterval;
         let lastSelectedGroup = loadSelectedGroup();
 
@@ -268,7 +269,7 @@
             const now = new Date();
             const currentDay = now.getDay();
             const currentHour = now.getHours();
-            return currentDay === 5 && currentHour >= 18; // Piątek po 18:00
+            return (currentDay === 5 && currentHour >= 18) || currentDay === 6 || currentDay === 0; // Piątek po 18:00 lub weekend
         }
 
         function getCurrentOrNextWeekRange() {
