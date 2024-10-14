@@ -616,6 +616,7 @@
                     });
                     return;
                 }
+                let isRowEmpty = true;
                 row.querySelectorAll('td').forEach((cell, cellIndex) => {
                     if (cellIndex === 0) return; // Skip the first column
                     const headerCell = rows[0].querySelectorAll('th')[cellIndex];
@@ -623,11 +624,16 @@
                     if (headerDateMatch) {
                         const headerDate = headerDateMatch[0];
                         const cellContent = cell.textContent.trim();
-                        if (!cellContent.includes(headerDate)) {
+                        if (cellContent.includes(headerDate)) {
+                            isRowEmpty = false; // If any cell contains the date, the row is not empty
+                        } else {
                             cell.textContent = ''; // Clear cell content if date not found
                         }
                     }
                 });
+                if (isRowEmpty) {
+                    row.remove(); // Remove the row if all cells are empty
+                }
             });
 
             return table.outerHTML;
