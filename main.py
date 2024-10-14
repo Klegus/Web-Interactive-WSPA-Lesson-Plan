@@ -11,7 +11,17 @@ from mangum import Mangum
 app = FastAPI()
 
 # Pobierz MongoDB URI ze zmiennej środowiskowej
-MONGO_URI = os.environ.get("MONGO_URI")
+if not os.environ.get("MONGO_URI"):
+    #use mongo from .env file
+    from dotenv import load_dotenv
+    load_dotenv()
+    MONGO_URI = os.getenv("MONGO_URI")
+    DEV = os.getenv("DEV")
+    BACKEND_URL = os.getenv("BACKEND_URL")
+else:
+    MONGO_URI = os.environ.get("MONGO_URI")
+    DEV = os.environ.get("DEV")
+    BACKEND_URL = os.environ.get("BACKEND_URL")
 if not MONGO_URI:
     raise ValueError("MONGO_URI environment variable is not set")
 
@@ -79,7 +89,7 @@ async def get_comparisons(group_name: str):
 async def get_status():
     try:
         async with httpx.AsyncClient() as client:
-            response = await client.get("http://37.27.207.141/status")
+            response = await client.get(BACKEND_URL)
         
         if response.status_code == 200:
             return response.json()
@@ -88,5 +98,13 @@ async def get_status():
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-# Handler dla AWS Lambda
-handler = Mangum(app)
+
+
+if DEV == 'True':
+    if __name__ == "__main__":
+        import uvicorn
+        uvicorn.run(app, host="127.0.0.1", port=8000)
+else:
+    # Handler dla AWS Lambda
+    handler = Mangum(app)
+
