@@ -608,7 +608,7 @@
                     const dayCells = row.querySelectorAll('th');
                     dayCells.forEach((cell, cellIndex) => {
                         if (cellIndex > 0) { // Skip the first column
-                            const dayOfWeek = weekRange.start.getDay() + cellIndex - 1;
+                            const dayOfWeek = cellIndex - 1;
                             const date = new Date(weekRange.start);
                             date.setDate(weekRange.start.getDate() + dayOfWeek);
                             cell.textContent += ` (${formatDate(date).slice(0, 5)})`;
