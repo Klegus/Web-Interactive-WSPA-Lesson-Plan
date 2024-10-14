@@ -10,6 +10,45 @@
         body {
             background: linear-gradient(120deg, #f0f4f8 0%, #d9e2ec 100%);
         }
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 60px;
+            height: 34px;
+        }
+        .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: .4s;
+            border-radius: 34px;
+        }
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 26px;
+            width: 26px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+        input:checked + .slider {
+            background-color: #2196F3;
+        }
+        input:checked + .slider:before {
+            transform: translateX(26px);
+        }
         .comparison-card {
             transition: all 0.3s ease;
         }
@@ -181,6 +220,13 @@
                 <option value="{{ group }}">{{ group }}</option>
                 {% endfor %}
             </select>
+        </div>
+        <div class="mb-4 flex items-center justify-center">
+            <label for="filter-toggle" class="mr-2">Filtruj plan dla bieżącego tygodnia:</label>
+            <label class="switch">
+                <input type="checkbox" id="filter-toggle" checked>
+                <span class="slider"></span>
+            </label>
         </div>
         <div id="plan-container" class="bg-white p-8 rounded-lg shadow-lg mb-12 hidden">
             <h2 id="group-name" class="text-3xl font-bold mb-3 text-gray-800"></h2>
@@ -474,9 +520,14 @@
                     const weekRange = getCurrentOrNextWeekRange();
                     weekRangeElement.textContent = `Tydzień: ${formatDate(weekRange.start)} - ${formatDate(weekRange.end)}`;
                     
-                    // Filtruj plan_html, aby pokazać tylko lekcje z bieżącego tygodnia
-                    const filteredPlanHtml = filterPlanForCurrentWeek(plan_html, weekRange);
-                    planContentElement.innerHTML = filteredPlanHtml;
+                    const filterToggle = document.getElementById('filter-toggle');
+                    if (filterToggle.checked) {
+                        // Filtruj plan_html, aby pokazać tylko lekcje z bieżącego tygodnia
+                        const filteredPlanHtml = filterPlanForCurrentWeek(plan_html, weekRange);
+                        planContentElement.innerHTML = filteredPlanHtml;
+                    } else {
+                        planContentElement.innerHTML = plan_html;
+                    }
                     
                     const table = planContentElement.querySelector('table');
                     if (table) {
@@ -556,13 +607,15 @@
                 let shouldKeepRow = false;
                 row.querySelectorAll('td').forEach(cell => {
                     const cellContent = cell.textContent.trim();
-                    const dateMatch = cellContent.match(/(\d{1,2})\.(\d{1,2})/);
-                    if (dateMatch) {
-                        const [, day, month] = dateMatch;
-                        const cellDate = new Date(weekRange.start.getFullYear(), parseInt(month) - 1, parseInt(day));
-                        if (cellDate >= weekRange.start && cellDate <= weekRange.end) {
-                            shouldKeepRow = true;
-                        }
+                    const dateMatches = cellContent.match(/(\d{1,2})\.(\d{1,2})/g);
+                    if (dateMatches) {
+                        dateMatches.forEach(match => {
+                            const [day, month] = match.split('.').map(Number);
+                            const cellDate = new Date(weekRange.start.getFullYear(), month - 1, day);
+                            if (cellDate >= weekRange.start && cellDate <= weekRange.end) {
+                                shouldKeepRow = true;
+                            }
+                        });
                     }
                 });
                 if (!shouldKeepRow) {
@@ -571,6 +624,14 @@
             });
 
             return table.outerHTML;
+        }
+
+        function toggleFilterPlan() {
+            const filterToggle = document.getElementById('filter-toggle');
+            const selectedGroup = groupSelect.value;
+            if (selectedGroup) {
+                loadPlanAndComparisons(selectedGroup);
+            }
         }
 
         window.addEventListener('DOMContentLoaded', async () => {
@@ -582,6 +643,10 @@
                 setInterval(updateTimeSinceLastUpdate, 60000);
             }
             checkServerStatus();
+            
+            // Dodaj nasłuchiwanie zdarzeń dla przełącznika filtrowania
+            const filterToggle = document.getElementById('filter-toggle');
+            filterToggle.addEventListener('change', toggleFilterPlan);
         });
         let lastUpdateTime = null;
         async function checkServerStatus() {
