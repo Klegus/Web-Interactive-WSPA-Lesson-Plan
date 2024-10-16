@@ -222,11 +222,12 @@
             </select>
         </div>
         <div class="mb-4 flex items-center justify-center">
-            <label for="filter-toggle" class="mr-2">Filtruj plan dla bieżącego tygodnia:</label>
+            <label for="filter-toggle" class="mr-2">Filtruj plan dla wybranego tygodnia:</label>
             <label class="switch">
                 <input type="checkbox" id="filter-toggle" checked>
                 <span class="slider"></span>
             </label>
+            <button id="nextWeekBtn" class="ml-4 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600">Następny tydzień</button>
         </div>
         <div id="plan-container" class="bg-white p-8 rounded-lg shadow-lg mb-12 hidden">
             <h2 id="group-name" class="text-3xl font-bold mb-3 text-gray-800"></h2>
@@ -272,12 +273,25 @@
             return (currentDay === 5 && currentHour >= 18) || currentDay === 6 || currentDay === 0; // Piątek po 18:00 lub weekend
         }
 
+        let currentWeekOffset = 0;
+
         function getCurrentOrNextWeekRange() {
             let date = new Date();
             if (shouldShowNextWeek()) {
-                date.setDate(date.getDate() + 7); // Przejdź do następnego tygodnia
+                currentWeekOffset = 1;
             }
+            date.setDate(date.getDate() + (7 * currentWeekOffset));
             return getWeekRange(date);
+        }
+
+        function moveToNextWeek() {
+            if (currentWeekOffset < 1) {
+                currentWeekOffset++;
+                const selectedGroup = groupSelect.value;
+                if (selectedGroup) {
+                    loadPlanAndComparisons(selectedGroup);
+                }
+            }
         }
         const colors = [
             'bg-blue-50 border-blue-200 text-blue-800',
@@ -515,9 +529,8 @@
                     const { group_name, plan_html, timestamp } = planResponse.data;
                     
                     groupNameElement.textContent = group_name;
-                    const updateTime = new Date(timestamp);
-                    const timeSince = timeSinceUpdate(timestamp);
-                    planDateElement.textContent = `Data ostatniej zmiany planu: ${updateTime.toLocaleString()} (${timeSince})`;
+                    lastUpdateTimestamp = new Date(timestamp);
+                    updateTimeSinceLastUpdate();
                     
                     const weekRange = getCurrentOrNextWeekRange();
                     weekRangeElement.textContent = `Tydzień: ${formatDate(weekRange.start)} - ${formatDate(weekRange.end)}`;
@@ -584,11 +597,13 @@
                 comparisonsContainer.innerHTML = '';
             }
         }
+        let lastUpdateTimestamp;
+
         function updateTimeSinceLastUpdate() {
-            const timestampStr = planDateElement.textContent.split(': ')[1].split(' (')[0];
-            const timestamp = new Date(timestampStr);
-            const timeSince = timeSinceUpdate(timestamp);
-            planDateElement.textContent = `Data: ${timestamp.toLocaleString()} (${timeSince})`;
+            if (lastUpdateTimestamp) {
+                const timeSince = timeSinceUpdate(lastUpdateTimestamp);
+                planDateElement.textContent = `Data ostatniej zmiany planu: ${lastUpdateTimestamp.toLocaleString()} (${timeSince})`;
+            }
         }
         groupSelect.addEventListener('change', async (event) => {
             const selectedGroup = event.target.value;
@@ -683,6 +698,9 @@
             
             // Dodaj nasłuchiwanie zdarzeń dla przełącznika filtrowania
             filterToggle.addEventListener('change', toggleFilterPlan);
+
+            // Dodaj obsługę przycisku "Następny tydzień"
+            document.getElementById('nextWeekBtn').addEventListener('click', moveToNextWeek);
         });
         let lastUpdateTime = null;
         async function checkServerStatus() {
