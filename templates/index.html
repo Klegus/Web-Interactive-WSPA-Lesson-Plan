@@ -407,7 +407,7 @@
 
     const headerRow = rows[0];
     headerRow.querySelectorAll('th').forEach((th, index) => {
-        if (th.textContent.trim() === dayNames[currentDay]) {
+        if (th.textContent.trim().startsWith(dayNames[currentDay])) {
             currentDayColumn = index;
             console.log(`Znaleziono kolumnę dla ${dayNames[currentDay]}: ${currentDayColumn}`);
         }
@@ -448,7 +448,7 @@
                 if (cellToHighlight) {
                     cellToHighlight.classList.add('current-time-highlight');
                     console.log(`Podświetlono komórkę: rząd ${i}, kolumna ${currentDayColumn}`);
-                    const lessonName = cellToHighlight.textContent.trim();
+                    const lessonName = cellToHighlight.querySelector('.subject')?.textContent.trim() || cellToHighlight.textContent.trim();
                     const timeToEnd = endTime - currentTime;
                     currentLessonInfo = lessonName ? 
                         `Aktualna lekcja: ${lessonName}<br>Koniec za: ${formatMinutesToTime(timeToEnd)}` :
@@ -458,7 +458,7 @@
                     if (i < rows.length - 1) {
                         const nextCell = rows[i+1].querySelectorAll('td')[currentDayColumn];
                         if (nextCell) {
-                            const nextLessonName = nextCell.textContent.trim();
+                            const nextLessonName = nextCell.querySelector('.subject')?.textContent.trim() || nextCell.textContent.trim();
                             const nextStartTime = convertTimeToMinutes(rows[i+1].querySelector('td:first-child').textContent.replace(/<[^>]*>/g, '').split('-')[0].trim());
                             nextLessonInfo = nextLessonName ? 
                                 `Następna lekcja: ${nextLessonName}<br>Rozpoczyna się o: ${formatMinutesToTime(nextStartTime)}` :
@@ -478,7 +478,7 @@
                 // Add next lesson info
                 const nextCell = rows[i].querySelectorAll('td')[currentDayColumn];
                 if (nextCell) {
-                    const nextLessonName = nextCell.textContent.trim();
+                    const nextLessonName = nextCell.querySelector('.subject')?.textContent.trim() || nextCell.textContent.trim();
                     nextLessonInfo = nextLessonName ? 
                         `Następna lekcja: ${nextLessonName}<br>Rozpoczyna się o: ${formatMinutesToTime(startTime)}` :
                         "Brak następnych lekcji";
