@@ -483,20 +483,20 @@
                 if (cellToHighlight) {
                     cellToHighlight.classList.add('current-time-highlight');
                     console.log(`Podświetlono komórkę: rząd ${i}, kolumna ${currentDayColumn}`);
-                    const lessonName = cellToHighlight.querySelector('.subject')?.textContent.trim() || cellToHighlight.textContent.trim();
+                    const lessonContent = cellToHighlight.innerHTML.trim();
                     const timeToEnd = endTime - currentTime;
-                    currentLessonInfo = lessonName ? 
-                        `Aktualna lekcja: ${lessonName}<br>Koniec za: ${formatMinutesToTime(timeToEnd)}` :
+                    currentLessonInfo = lessonContent ? 
+                        `Aktualna lekcja: ${lessonContent}<br>Koniec za: ${formatMinutesToTime(timeToEnd)}` :
                         "Czas wolny!";
                     
                     // Check for next lesson
                     if (i < rows.length - 1) {
                         const nextCell = rows[i+1].querySelectorAll('td')[currentDayColumn];
                         if (nextCell) {
-                            const nextLessonName = nextCell.querySelector('.subject')?.textContent.trim() || nextCell.textContent.trim();
+                            const nextLessonContent = nextCell.innerHTML.trim();
                             const nextStartTime = convertTimeToMinutes(rows[i+1].querySelector('td:first-child').textContent.replace(/<[^>]*>/g, '').split('-')[0].trim());
-                            nextLessonInfo = nextLessonName ? 
-                                `Następna lekcja: ${nextLessonName}<br>Rozpoczyna się o: ${formatMinutesToTime(nextStartTime)}` :
+                            nextLessonInfo = nextLessonContent ? 
+                                `Następna lekcja: ${nextLessonContent}<br>Rozpoczyna się o: ${formatMinutesToTime(nextStartTime)}` :
                                 "Brak następnych lekcji";
                         }
                     }
