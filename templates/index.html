@@ -227,7 +227,8 @@
                 <input type="checkbox" id="filter-toggle" checked>
                 <span class="slider"></span>
             </label>
-            <button id="nextWeekBtn" class="ml-4 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600">Następny tydzień</button>
+            <button id="prevWeekBtn" class="ml-4 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed" disabled>Poprzedni tydzień</button>
+            <button id="nextWeekBtn" class="ml-4 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed">Następny tydzień</button>
         </div>
         <div id="plan-container" class="bg-white p-8 rounded-lg shadow-lg mb-12 hidden">
             <h2 id="group-name" class="text-3xl font-bold mb-3 text-gray-800"></h2>
@@ -287,11 +288,31 @@
         function moveToNextWeek() {
             if (currentWeekOffset < 1) {
                 currentWeekOffset++;
+                updateWeekButtons();
                 const selectedGroup = groupSelect.value;
                 if (selectedGroup) {
                     loadPlanAndComparisons(selectedGroup);
                 }
             }
+        }
+
+        function moveToPrevWeek() {
+            if (currentWeekOffset > 0) {
+                currentWeekOffset--;
+                updateWeekButtons();
+                const selectedGroup = groupSelect.value;
+                if (selectedGroup) {
+                    loadPlanAndComparisons(selectedGroup);
+                }
+            }
+        }
+
+        function updateWeekButtons() {
+            const prevWeekBtn = document.getElementById('prevWeekBtn');
+            const nextWeekBtn = document.getElementById('nextWeekBtn');
+            
+            prevWeekBtn.disabled = currentWeekOffset === 0;
+            nextWeekBtn.disabled = currentWeekOffset === 1;
         }
         const colors = [
             'bg-blue-50 border-blue-200 text-blue-800',
@@ -699,8 +720,12 @@
             // Dodaj nasłuchiwanie zdarzeń dla przełącznika filtrowania
             filterToggle.addEventListener('change', toggleFilterPlan);
 
-            // Dodaj obsługę przycisku "Następny tydzień"
+            // Dodaj obsługę przycisków "Poprzedni tydzień" i "Następny tydzień"
+            document.getElementById('prevWeekBtn').addEventListener('click', moveToPrevWeek);
             document.getElementById('nextWeekBtn').addEventListener('click', moveToNextWeek);
+
+            // Inicjalizacja stanu przycisków
+            updateWeekButtons();
         });
         let lastUpdateTime = null;
         async function checkServerStatus() {
