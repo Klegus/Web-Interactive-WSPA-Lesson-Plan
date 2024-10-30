@@ -89,7 +89,7 @@ async def get_comparisons(group_name: str):
 async def get_status():
     try:
         async with httpx.AsyncClient() as client:
-            response = await client.get(BACKEND_URL)
+            response = await client.get("http://37.27.207.141/status")
         
         if response.status_code == 200:
             return response.json()
