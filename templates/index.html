@@ -474,6 +474,17 @@
         }
 
             function highlightCurrentTimeSlot() {
+    if (!filterToggle.checked) {
+        // Wyczyść wszystkie podświetlenia i informacje o czasie
+        const infoElement = document.getElementById('current-lesson-info');
+        infoElement.innerHTML = '';
+        document.querySelectorAll('.current-time-highlight').forEach(cell => {
+            cell.classList.remove('current-time-highlight');
+        });
+        clearInterval(countdownInterval);
+        return;
+    }
+    
     console.log("Rozpoczęcie funkcji highlightCurrentTimeSlot");
     const now = new Date();
     const currentDay = now.getDay();
