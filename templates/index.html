@@ -654,7 +654,7 @@
                     
                     try {
                         console.log("Próba wstawienia HTML do elementu");
-                        planContentElement.innerHTML = plan_html;
+                        planContentElement.innerHTML = planResponse.data.plan_html;
                         console.log("HTML wstawiony pomyślnie");
                         
                         const table = planContentElement.querySelector('table');
