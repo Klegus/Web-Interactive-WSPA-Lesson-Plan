@@ -92,8 +92,8 @@ async def get_plan(collection_name: str, group_name: str):
             )
         
         plan_html = latest_plan["groups"][group_name].replace('\n', '')
-        print(f"Długość pobranego HTML: {len(plan_html)}")
-        print(f"Fragment HTML: {plan_html[:200]}...")  # Pokaż początek planu
+        #print(f"Długość pobranego HTML: {len(plan_html)}")
+        #print(f"Fragment HTML: {plan_html[:200]}...")  # Pokaż początek planu
         
         response = {
             "plan_name": latest_plan["plan_name"],
@@ -132,6 +132,7 @@ async def get_comparisons(collection_name: str, group_name: str):
         
         return comparisons
     except Exception as e:
+        return []
         raise HTTPException(status_code=500, detail=str(e))
 
 @app.get("/api/status")
