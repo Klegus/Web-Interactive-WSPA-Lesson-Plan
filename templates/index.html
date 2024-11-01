@@ -370,6 +370,8 @@
         function updateGroupSelect(planElement) {
             groupSelect.disabled = !planElement;
             groupSelect.innerHTML = '<option value="">Wybierz grupę</option>';
+            planContainer.classList.add('hidden');
+            comparisonsContainer.innerHTML = '';
             
             if (planElement) {
                 const groups = JSON.parse(planElement.dataset.groups);
@@ -607,7 +609,6 @@
                         filterPlanForCurrentWeek(table, weekRange);
                     }
                     
-                    const table = planContentElement.querySelector('table');
                     if (table) {
                         table.classList.add('w-full', 'border-collapse', 'border', 'border-gray-200');
                         const rows = table.querySelectorAll('tr');
