@@ -664,8 +664,12 @@
                         }
                         console.log("Znaleziono tabelę w planie");
                     
-                    if (filterToggle.checked && table) {
-                        filterPlanForCurrentWeek(table, weekRange);
+                        if (filterToggle.checked && table) {
+                            filterPlanForCurrentWeek(table, weekRange);
+                        }
+                    } catch (renderError) {
+                        console.error("Błąd podczas renderowania tabeli:", renderError);
+                        throw renderError;
                     }
                     
                     if (table) {
