@@ -428,10 +428,16 @@
             const cleanTimeString = timeString.replace(/<[^>]*>/g, '').trim();
             
             // Obsługa formatu bez dwukropka (np. "815")
-            if (cleanTimeString.length === 3 || cleanTimeString.length === 4) {
-                const hours = parseInt(cleanTimeString.slice(0, -2));
-                const minutes = parseInt(cleanTimeString.slice(-2));
-                return hours * 60 + minutes;
+            if (!cleanTimeString.includes(':')) {
+                if (cleanTimeString.length === 3) {
+                    const hours = parseInt(cleanTimeString[0]);
+                    const minutes = parseInt(cleanTimeString.slice(1));
+                    return hours * 60 + minutes;
+                } else if (cleanTimeString.length === 4) {
+                    const hours = parseInt(cleanTimeString.slice(0, 2));
+                    const minutes = parseInt(cleanTimeString.slice(2));
+                    return hours * 60 + minutes;
+                }
             }
             
             // Obsługa formatu z dwukropkiem (np. "8:15")
