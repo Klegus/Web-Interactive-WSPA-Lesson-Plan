@@ -537,11 +537,27 @@
                     if (i < rows.length - 1) {
                         const nextCell = rows[i+1].querySelectorAll('td')[currentDayColumn];
                         if (nextCell) {
-                            const nextLessonContent = nextCell.innerHTML.trim();
-                            const nextStartTime = convertTimeToMinutes(rows[i+1].querySelector('td:first-child').textContent.replace(/<[^>]*>/g, '').split('-')[0].trim());
-                            nextLessonInfo = nextLessonContent ? 
-                                `Następna lekcja: ${nextLessonContent}<br>Rozpoczyna się o: ${formatMinutesToTime(nextStartTime)}` :
-                                "Brak następnych lekcji";
+                            console.log("Znaleziono komórkę następnej lekcji:", nextCell);
+                            const nextLessonContent = nextCell.innerHTML ? nextCell.innerHTML.trim() : '';
+                            console.log("Zawartość następnej lekcji:", nextLessonContent);
+                        
+                            const nextTimeCell = rows[i+1].querySelector('td:first-child');
+                            console.log("Komórka czasu następnej lekcji:", nextTimeCell);
+                        
+                            if (nextTimeCell && nextTimeCell.textContent) {
+                                const nextStartTime = convertTimeToMinutes(nextTimeCell.textContent.replace(/<[^>]*>/g, '').split('-')[0].trim());
+                                console.log("Czas rozpoczęcia następnej lekcji:", nextStartTime);
+                                nextLessonInfo = nextLessonContent ? 
+                                    `Następna lekcja: ${nextLessonContent}<br>Rozpoczyna się o: ${formatMinutesToTime(nextStartTime)}` :
+                                    "Brak następnych lekcji";
+                            } else {
+                                console.log("Brak danych o czasie następnej lekcji");
+                                nextLessonInfo = nextLessonContent ? 
+                                    `Następna lekcja: ${nextLessonContent}` :
+                                    "Brak następnych lekcji";
+                            }
+                        } else {
+                            console.log("Nie znaleziono komórki następnej lekcji");
                         }
                     }
                 } else {
@@ -592,7 +608,9 @@
         async function loadPlanAndComparisons(selectedPlan, selectedGroup) {
             if (selectedPlan && selectedGroup) {
                 try {
+                    console.log("Pobieranie planu dla:", selectedPlan, selectedGroup);
                     const planResponse = await axios.get(`/api/plan/${selectedPlan}/${selectedGroup}`);
+                    console.log("Otrzymano odpowiedź:", planResponse.data);
                     const { group_name, plan_html, timestamp } = planResponse.data;
                     
                     groupNameElement.textContent = group_name;
@@ -653,8 +671,13 @@
 
                         } catch (error) {
                     console.error('Błąd podczas pobierania danych:', error);
+                    console.error('Szczegóły błędu:', error.response?.data || error.message);
+                    console.error('Stack trace:', error.stack);
                     planContainer.classList.add('hidden');
-                    comparisonsContainer.innerHTML = '<p class="text-xl text-center text-red-600">Wystąpił błąd podczas pobierania danych.</p>';
+                    comparisonsContainer.innerHTML = `<p class="text-xl text-center text-red-600">
+                        Wystąpił błąd podczas pobierania danych.<br>
+                        Szczegóły błędu: ${error.response?.data?.detail || error.message}
+                    </p>`;
                 }
             } else {
                 planContainer.classList.add('hidden');
