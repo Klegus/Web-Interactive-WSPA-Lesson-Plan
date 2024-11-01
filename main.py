@@ -124,6 +124,9 @@ async def get_comparisons(collection_name: str, group_name: str):
             }
         ).sort("timestamp", -1))
         
+        if not comparisons:
+            return []  # Zwróć pustą listę zamiast wyrzucać błąd
+            
         for comparison in comparisons:
             comparison['_id'] = str(comparison['_id'])
         
