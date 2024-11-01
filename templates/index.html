@@ -612,21 +612,57 @@
                     const planResponse = await axios.get(`/api/plan/${selectedPlan}/${selectedGroup}`);
                     console.log("Otrzymano odpowiedź:", planResponse.data);
                     console.log("Plan HTML:", planResponse.data.plan_html);
+                    console.log("Typ plan_html:", typeof planResponse.data.plan_html);
                     
                     if (!planResponse.data.plan_html) {
                         throw new Error("Otrzymano pusty plan HTML");
                     }
-                    const { group_name, plan_html, timestamp } = planResponse.data;
-                    
-                    groupNameElement.textContent = group_name;
-                    lastUpdateTimestamp = new Date(timestamp);
-                    updateTimeSinceLastUpdate();
+
+                    // Sprawdź czy plan_html jest stringiem i czy nie jest pusty
+                    if (typeof planResponse.data.plan_html !== 'string') {
+                        console.error("plan_html nie jest stringiem:", planResponse.data.plan_html);
+                        throw new Error("Nieprawidłowy format danych planu");
+                    }
+
+                    // Sprawdź czy plan zawiera tabelę
+                    if (!planResponse.data.plan_html.includes('<table')) {
+                        console.error("plan_html nie zawiera tabeli:", planResponse.data.plan_html);
+                        throw new Error("Otrzymany plan nie zawiera tabeli");
+                    }
+                    try {
+                        const { group_name, plan_html, timestamp } = planResponse.data;
+                        
+                        console.log("Parsowanie danych odpowiedzi:");
+                        console.log("- group_name:", group_name);
+                        console.log("- timestamp:", timestamp);
+                        console.log("- plan_html długość:", plan_html ? plan_html.length : 0);
+                        
+                        if (!group_name || !timestamp || !plan_html) {
+                            throw new Error("Brak wymaganych danych w odpowiedzi");
+                        }
+                        
+                        groupNameElement.textContent = group_name;
+                        lastUpdateTimestamp = new Date(timestamp);
+                        updateTimeSinceLastUpdate();
+                    } catch (parseError) {
+                        console.error("Błąd podczas parsowania danych odpowiedzi:", parseError);
+                        throw parseError;
+                    }
                     
                     const weekRange = getCurrentOrNextWeekRange();
                     weekRangeElement.textContent = `Tydzień: ${formatDate(weekRange.start)} - ${formatDate(weekRange.end)}`;
                     
-                    planContentElement.innerHTML = plan_html;
-                    const table = planContentElement.querySelector('table');
+                    try {
+                        console.log("Próba wstawienia HTML do elementu");
+                        planContentElement.innerHTML = plan_html;
+                        console.log("HTML wstawiony pomyślnie");
+                        
+                        const table = planContentElement.querySelector('table');
+                        if (!table) {
+                            console.error("Nie znaleziono tabeli po wstawieniu HTML");
+                            throw new Error("Nie można znaleźć tabeli w planie");
+                        }
+                        console.log("Znaleziono tabelę w planie");
                     
                     if (filterToggle.checked && table) {
                         filterPlanForCurrentWeek(table, weekRange);
