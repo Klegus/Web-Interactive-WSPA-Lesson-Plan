@@ -652,12 +652,13 @@
                     const weekRange = getCurrentOrNextWeekRange();
                     weekRangeElement.textContent = `Tydzień: ${formatDate(weekRange.start)} - ${formatDate(weekRange.end)}`;
                     
+                    let table;
                     try {
                         console.log("Próba wstawienia HTML do elementu");
                         planContentElement.innerHTML = planResponse.data.plan_html;
                         console.log("HTML wstawiony pomyślnie");
                         
-                        const table = planContentElement.querySelector('table');
+                        table = planContentElement.querySelector('table');
                         if (!table) {
                             console.error("Nie znaleziono tabeli po wstawieniu HTML");
                             throw new Error("Nie można znaleźć tabeli w planie");
