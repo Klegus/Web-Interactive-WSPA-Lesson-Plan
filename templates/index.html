@@ -611,6 +611,11 @@
                     console.log("Pobieranie planu dla:", selectedPlan, selectedGroup);
                     const planResponse = await axios.get(`/api/plan/${selectedPlan}/${selectedGroup}`);
                     console.log("Otrzymano odpowiedź:", planResponse.data);
+                    console.log("Plan HTML:", planResponse.data.plan_html);
+                    
+                    if (!planResponse.data.plan_html) {
+                        throw new Error("Otrzymano pusty plan HTML");
+                    }
                     const { group_name, plan_html, timestamp } = planResponse.data;
                     
                     groupNameElement.textContent = group_name;

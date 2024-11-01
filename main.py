@@ -71,17 +71,30 @@ async def read_root(request: Request):
 @app.get("/api/plan/{collection_name}/{group_name}")
 async def get_plan(collection_name: str, group_name: str):
     try:
+        print(f"Pobieranie planu dla kolekcji: {collection_name}, grupy: {group_name}")
         latest_plan = db[collection_name].find_one(sort=[("timestamp", -1)])
         
-        if not latest_plan or group_name not in latest_plan["groups"]:
+        if not latest_plan:
+            print("Nie znaleziono planu w kolekcji")
             raise HTTPException(status_code=404, detail="Plan not found")
+            
+        if group_name not in latest_plan["groups"]:
+            print(f"Nie znaleziono grupy {group_name} w planie")
+            print(f"Dostępne grupy: {list(latest_plan['groups'].keys())}")
+            raise HTTPException(status_code=404, detail="Group not found")
         
-        return {
+        plan_html = latest_plan["groups"][group_name]
+        print(f"Długość pobranego HTML: {len(plan_html)}")
+        print(f"Fragment HTML: {plan_html[:200]}...")  # Pokaż początek planu
+        
+        response = {
             "plan_name": latest_plan["plan_name"],
             "group_name": group_name,
-            "plan_html": latest_plan["groups"][group_name],
+            "plan_html": plan_html,
             "timestamp": latest_plan["timestamp"]
         }
+        print("Wysyłanie odpowiedzi:", response)
+        return response
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
