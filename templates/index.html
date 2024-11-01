@@ -845,6 +845,19 @@
         function toggleFilterPlan() {
             const isChecked = filterToggle.checked;
             setCookie('filterToggle', isChecked, 7); // Save state for 7 days
+            
+            // Wyczyść interwały czasowe
+            clearInterval(countdownInterval);
+            const timeUpdateInterval = window.timeUpdateInterval;
+            if (timeUpdateInterval) {
+                clearInterval(timeUpdateInterval);
+            }
+            
+            // Ustaw nowe interwały jeśli filtrowanie jest włączone
+            if (isChecked) {
+                window.timeUpdateInterval = setInterval(updateTimeSinceLastUpdate, 60000);
+            }
+            
             const selectedPlan = planSelect.value;
             const selectedGroup = groupSelect.value;
             if (selectedPlan && selectedGroup) {
@@ -866,8 +879,10 @@
                     groupSelect.value = lastSelectedGroup;
                     await loadPlanAndComparisons(lastSelectedPlan, lastSelectedGroup);
                 }
-                // Aktualizuj czas co minutę
-                setInterval(updateTimeSinceLastUpdate, 60000);
+                // Aktualizuj czas co minutę tylko gdy filtrowanie jest włączone
+                if (filterToggle.checked) {
+                    setInterval(updateTimeSinceLastUpdate, 60000);
+                }
             }
             checkServerStatus();
             
