@@ -80,8 +80,16 @@ async def get_plan(collection_name: str, group_name: str):
             
         if group_name not in latest_plan["groups"]:
             print(f"Nie znaleziono grupy {group_name} w planie")
-            print(f"Dostępne grupy: {list(latest_plan['groups'].keys())}")
-            raise HTTPException(status_code=404, detail="Group not found")
+            available_groups = list(latest_plan["groups"].keys())
+            print(f"Dostępne grupy: {available_groups}")
+            raise HTTPException(
+                status_code=404, 
+                detail={
+                    "message": "Nie znaleziono wybranej grupy",
+                    "requested_group": group_name,
+                    "available_groups": available_groups
+                }
+            )
         
         plan_html = latest_plan["groups"][group_name]
         print(f"Długość pobranego HTML: {len(plan_html)}")
