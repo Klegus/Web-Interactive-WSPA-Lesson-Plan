@@ -1,5 +1,3 @@
-# Plik: main.py
-
 import os
 import httpx
 from fastapi import FastAPI, Request, HTTPException
@@ -7,12 +5,12 @@ from fastapi.templating import Jinja2Templates
 from fastapi.staticfiles import StaticFiles
 from pymongo import MongoClient
 from mangum import Mangum
+from typing import List, Dict
 
 app = FastAPI()
 
-# Pobierz MongoDB URI ze zmiennej środowiskowej
+# Konfiguracja środowiska
 if not os.environ.get("MONGO_URI"):
-    #use mongo from .env file
     from dotenv import load_dotenv
     load_dotenv()
     MONGO_URI = os.getenv("MONGO_URI")
@@ -22,62 +20,89 @@ else:
     MONGO_URI = os.environ.get("MONGO_URI")
     DEV = os.environ.get("DEV")
     BACKEND_URL = os.environ.get("BACKEND_URL")
+
 if not MONGO_URI:
     raise ValueError("MONGO_URI environment variable is not set")
 
+# Połączenie z MongoDB
 try:
     client = MongoClient(MONGO_URI)
     db = client['Lesson']
-    # Sprawdź połączenie
     client.admin.command('ismaster')
     print("Successfully connected to MongoDB")
 except Exception as e:
     print(f"Failed to connect to MongoDB: {e}")
     raise
 
-# Konfiguracja szablonów
 templates = Jinja2Templates(directory="templates")
-
-# Dodaj obsługę plików statycznych (CSS, JS)
 app.mount("/static", StaticFiles(directory="static"), name="static")
+
+def get_semester_collections() -> Dict[str, Dict]:
+    """
+    Pobiera listę wszystkich kolekcji planów i ich najnowsze dokumenty.
+    Zwraca słownik z nazwami kolekcji i odpowiadającymi im informacjami.
+    """
+    collections_data = {}
+    for collection_name in db.list_collection_names():
+        if collection_name.startswith('plans_'):
+            # Pobierz najnowszy dokument z kolekcji
+            latest_plan = db[collection_name].find_one(sort=[("timestamp", -1)])
+            if latest_plan and "plan_name" in latest_plan and "groups" in latest_plan:
+                collections_data[collection_name] = {
+                    "plan_name": latest_plan["plan_name"],
+                    "groups": latest_plan["groups"],
+                    "timestamp": latest_plan["timestamp"]
+                }
+    return collections_data
 
 @app.get("/")
 async def read_root(request: Request):
     try:
-        # Pobierz listę dostępnych grup
-        latest_plan = db.plans.find_one(sort=[("timestamp", -1)])
-        groups = list(latest_plan["groups"].keys()) if latest_plan else []
+        # Pobierz wszystkie dostępne plany i ich grupy
+        semesters_data = get_semester_collections()
         
         return templates.TemplateResponse("index.html", {
             "request": request,
-            "groups": groups
+            "semesters": semesters_data
         })
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-@app.get("/api/plan/{group_name}")
-async def get_plan(group_name: str):
+@app.get("/api/plan/{collection_name}/{group_name}")
+async def get_plan(collection_name: str, group_name: str):
     try:
-        # Pobierz najnowszy plan dla wybranej grupy
-        latest_plan = db.plans.find_one(sort=[("timestamp", -1)])
+        latest_plan = db[collection_name].find_one(sort=[("timestamp", -1)])
+        
         if not latest_plan or group_name not in latest_plan["groups"]:
             raise HTTPException(status_code=404, detail="Plan not found")
         
-        plan_html = latest_plan["groups"][group_name]
-        return {"group_name": group_name, "plan_html": plan_html, "timestamp": latest_plan["timestamp"]}
+        return {
+            "plan_name": latest_plan["plan_name"],
+            "group_name": group_name,
+            "plan_html": latest_plan["groups"][group_name],
+            "timestamp": latest_plan["timestamp"]
+        }
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-@app.get("/api/comparisons/{group_name}")
-async def get_comparisons(group_name: str):
+@app.get("/api/comparisons/{collection_name}/{group_name}")
+async def get_comparisons(collection_name: str, group_name: str):
     try:
-        # Pobierz wszystkie porównania dla danej grupy
+        # Pobierz porównania dla konkretnego planu i grupy
         comparisons = list(db.plan_comparisons.find(
-            {"results." + group_name: {"$exists": True}},
-            {"timestamp": 1, "newer_plan_timestamp": 1, "older_plan_timestamp": 1, "model_used": 1, "results." + group_name: 1}
+            {
+                "collection_name": collection_name,
+                "results." + group_name: {"$exists": True}
+            },
+            {
+                "timestamp": 1,
+                "newer_plan_timestamp": 1,
+                "older_plan_timestamp": 1,
+                "model_used": 1,
+                "results." + group_name: 1
+            }
         ).sort("timestamp", -1))
         
-        # Konwertuj ObjectId na string dla serializacji JSON
         for comparison in comparisons:
             comparison['_id'] = str(comparison['_id'])
         
@@ -98,13 +123,9 @@ async def get_status():
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-
-
 if DEV == 'True':
     if __name__ == "__main__":
         import uvicorn
         uvicorn.run(app, host="127.0.0.1", port=8000)
 else:
-    # Handler dla AWS Lambda
     handler = Mangum(app)
-
