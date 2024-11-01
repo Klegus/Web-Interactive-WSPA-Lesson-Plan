@@ -600,13 +600,11 @@
                     const weekRange = getCurrentOrNextWeekRange();
                     weekRangeElement.textContent = `Tydzień: ${formatDate(weekRange.start)} - ${formatDate(weekRange.end)}`;
                     
-                    const filterToggle = document.getElementById('filter-toggle');
-                    if (filterToggle.checked) {
-                        // Filtruj plan_html, aby pokazać tylko lekcje z bieżącego tygodnia
-                        const filteredPlanHtml = filterPlanForCurrentWeek(plan_html, weekRange);
-                        planContentElement.innerHTML = filteredPlanHtml;
-                    } else {
-                        planContentElement.innerHTML = plan_html;
+                    planContentElement.innerHTML = plan_html;
+                    const table = planContentElement.querySelector('table');
+                    
+                    if (filterToggle.checked && table) {
+                        filterPlanForCurrentWeek(table, weekRange);
                     }
                     
                     const table = planContentElement.querySelector('table');
@@ -677,49 +675,56 @@
             await loadPlanAndComparisons(selectedPlan, selectedGroup);
         });
 
-        function filterPlanForCurrentWeek(planHtml, weekRange) {
-            const parser = new DOMParser();
-            const doc = parser.parseFromString(planHtml, 'text/html');
-            const table = doc.querySelector('table');
-            
-            if (!table) return planHtml;
+        function filterPlanForCurrentWeek(table, weekRange) {
+            if (!table) return;
 
             const rows = table.querySelectorAll('tr');
-            rows.forEach((row, rowIndex) => {
-                if (rowIndex === 0) {
-                    // Update header row with dates for the current week
-                    const dayCells = row.querySelectorAll('th');
-                    dayCells.forEach((cell, cellIndex) => {
-                        if (cellIndex > 0) { // Skip the first column
-                            const dayOfWeek = cellIndex - 1;
-                            const date = new Date(weekRange.start);
-                            date.setDate(weekRange.start.getDate() + dayOfWeek);
-                            cell.textContent += ` (${formatDate(date).slice(0, 5)})`;
-                        }
-                    });
-                    return;
-                }
-                let isRowEmpty = true;
-                row.querySelectorAll('td').forEach((cell, cellIndex) => {
-                    if (cellIndex === 0) return; // Skip the first column
-                    const headerCell = rows[0].querySelectorAll('th')[cellIndex];
-                    const headerDateMatch = headerCell.textContent.match(/\b(\d{1,2})\.(\d{2})\b/);
-                    if (headerDateMatch) {
-                        const headerDate = headerDateMatch[0];
-                        const cellContent = cell.textContent.trim();
-                        if (cellContent.includes(headerDate)) {
-                            isRowEmpty = false; // If any cell contains the date, the row is not empty
-                        } else {
-                            cell.textContent = ''; // Clear cell content if date not found
-                        }
-                    }
-                });
-                if (isRowEmpty) {
-                    row.remove(); // Remove the row if all cells are empty
+            const weekDays = ['Poniedziałek', 'Wtorek', 'Środa', 'Czwartek', 'Piątek'];
+            
+            // Aktualizuj nagłówki z datami
+            const headerRow = rows[0];
+            const headerCells = headerRow.querySelectorAll('th');
+            headerCells.forEach((cell, index) => {
+                if (index > 0 && index <= 5) { // Pomijamy pierwszą kolumnę (godziny)
+                    const dayOfWeek = index - 1;
+                    const date = new Date(weekRange.start);
+                    date.setDate(weekRange.start.getDate() + dayOfWeek);
+                    const originalText = cell.textContent.split('(')[0].trim(); // Zachowaj oryginalną nazwę dnia
+                    cell.textContent = `${originalText} (${formatDate(date).slice(0, 5)})`;
                 }
             });
 
-            return table.outerHTML;
+            // Filtruj wiersze z lekcjami
+            for (let i = 1; i < rows.length; i++) {
+                const row = rows[i];
+                const cells = row.querySelectorAll('td');
+                let hasLessonsInWeek = false;
+
+                cells.forEach((cell, cellIndex) => {
+                    if (cellIndex === 0) return; // Pomijamy kolumnę z godzinami
+
+                    const cellContent = cell.innerHTML;
+                    if (cellContent && cellContent.trim() !== '') {
+                        // Sprawdź, czy komórka zawiera datę z bieżącego tygodnia
+                        const currentDate = new Date(weekRange.start);
+                        currentDate.setDate(weekRange.start.getDate() + (cellIndex - 1));
+                        const dateStr = formatDate(currentDate).slice(0, 5); // Format: DD.MM
+                        
+                        if (!cellContent.includes(dateStr)) {
+                            cell.innerHTML = ''; // Wyczyść komórkę, jeśli data nie pasuje
+                        } else {
+                            hasLessonsInWeek = true;
+                        }
+                    }
+                });
+
+                // Usuń wiersz, jeśli nie ma w nim żadnych lekcji w tym tygodniu
+                if (!hasLessonsInWeek) {
+                    row.style.display = 'none';
+                } else {
+                    row.style.display = '';
+                }
+            }
         }
 
         function setCookie(name, value, days) {
@@ -743,9 +748,10 @@
         function toggleFilterPlan() {
             const isChecked = filterToggle.checked;
             setCookie('filterToggle', isChecked, 7); // Save state for 7 days
+            const selectedPlan = planSelect.value;
             const selectedGroup = groupSelect.value;
-            if (selectedGroup) {
-                loadPlanAndComparisons(selectedGroup);
+            if (selectedPlan && selectedGroup) {
+                loadPlanAndComparisons(selectedPlan, selectedGroup);
             }
         }
 
