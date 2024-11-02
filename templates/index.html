@@ -557,7 +557,8 @@
             const now = new Date();
             const currentDay = now.getDay();
             const currentHour = now.getHours();
-            return (currentDay === 5 && currentHour >= 18) || currentDay === 6 || currentDay === 0; // Piątek po 18:00 lub weekend
+            const currentMinutes = now.getMinutes();
+            return (currentDay === 5 && (currentHour > 21 || (currentHour === 21 && currentMinutes >= 15))) || currentDay === 6 || currentDay === 0; // Piątek po 21:15 lub weekend
         }
 
         let currentWeekOffset = 0;
