@@ -7,8 +7,15 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
     <style>
+        :root {
+            --wspaa-red: #E31E24;
+            --wspia-gray: #58595B;
+            --wspia-light-gray: #e5e7eb;
+        }
+        
         body {
             background: linear-gradient(120deg, #f0f4f8 0%, #d9e2ec 100%);
+            min-height: 100vh;
         }
         .switch {
             position: relative;
@@ -28,7 +35,7 @@
             left: 0;
             right: 0;
             bottom: 0;
-            background-color: #ccc;
+            background-color: white;
             transition: .4s;
             border-radius: 34px;
         }
@@ -44,13 +51,14 @@
             border-radius: 50%;
         }
         input:checked + .slider {
-            background-color: #2196F3;
+            background-color: var(--wspia-red);
         }
         input:checked + .slider:before {
             transform: translateX(26px);
         }
         .comparison-card {
             transition: all 0.3s ease;
+            border-left: 4px solid var(--wspia-red);
         }
         .comparison-card:hover {
             transform: translateY(-5px);
@@ -70,13 +78,13 @@
         }
         @keyframes pulse {
             0% {
-                background-color: rgba(255, 255, 0, 0.1);
+                background-color: rgba(227, 30, 36, 0.1);
             }
             50% {
-                background-color: rgba(255, 255, 0, 0.3);
+                background-color: rgba(227, 30, 36, 0.3);
             }
             100% {
-                background-color: rgba(255, 255, 0, 0.1);
+                background-color: rgba(227, 30, 36, 0.1);
             }
         }
         #plan-content table {
@@ -89,10 +97,16 @@
             height: 60px;
             overflow: hidden;
             text-overflow: ellipsis;
+            border: 1px solid #e5e7eb;
+            transition: all 0.2s ease;
+        }
+        #plan-content td:hover {
+            background-color: rgba(227, 30, 36, 0.05);
         }
         #plan-content td span.subject {
             font-weight: bold;
             display: block;
+            color: var(--wspia-red);
         }
         @media (max-width: 640px) {
             #plan-content {
@@ -109,7 +123,7 @@
         #countdown {
             font-size: 1.2em;
             font-weight: bold;
-            color: #4a5568;
+            color: var(--wspia-gray);
         }
         .server-status-container {
             position: fixed;
@@ -123,7 +137,6 @@
             box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
             z-index: 1000;
         }
-
         .server-status-indicator {
             width: 15px;
             height: 15px;
@@ -132,7 +145,6 @@
             position: relative;
             overflow: hidden;
         }
-
         .server-status-indicator::before {
             content: '';
             position: absolute;
@@ -143,20 +155,16 @@
             background-color: rgba(255, 255, 255, 0.5);
             border-radius: 50%;
         }
-
         .server-status-indicator.active::before {
             animation: pulse-inner 2s infinite;
         }
-
         .server-status-indicator.inactive {
             background-color: #EF4444;
         }
-
         .server-status-text {
             margin-left: 10px;
             font-weight: bold;
         }
-
         .server-status-tooltip {
             visibility: hidden;
             position: absolute;
@@ -173,7 +181,6 @@
             transition: opacity 0.3s, visibility 0.3s;
             margin-top: 10px;
         }
-
         .server-status-tooltip::before {
             content: '';
             position: absolute;
@@ -184,12 +191,10 @@
             border-color: transparent transparent #333 transparent;
             transform: translateX(-50%);
         }
-
         .server-status-container:hover .server-status-tooltip {
             visibility: visible;
             opacity: 1;
         }
-
         @keyframes pulse-inner {
             0% {
                 box-shadow: inset 0 0 0 0 rgba(255, 255, 255, 0.7);
@@ -201,43 +206,281 @@
                 box-shadow: inset 0 0 0 0 rgba(255, 255, 255, 0.7);
             }
         }
+
+        /* WSPiA-specific enhancements */
+        button {
+            transition: all 0.3s ease;
+            background-color: var(--wspia-red) !important;
+        }
+        
+        button:hover:not(:disabled) {
+            background-color: #c41a1f !important;
+            transform: translateY(-1px);
+        }
+
+        button:disabled {
+            background-color: var(--wspia-gray) !important;
+        }
+
+        select:focus {
+            border-color: var(--wspia-red) !important;
+            box-shadow: 0 0 0 2px rgba(227, 30, 36, 0.2) !important;
+        }
+
+        #current-lesson-info {
+            border-left: 4px solid var(--wspia-red);
+            transition: all 0.3s ease;
+        }
+
+        #current-lesson-info:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 16px rgba(0,0,0,0.1);
+        }
+        .selection-container {
+            max-width: 500px;
+            margin: 0 auto;
+            padding: 2rem;
+            background: white;
+            border-radius: 1rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            transition: all 0.5s ease;
+        }
+
+        .selection-container.expanded {
+            max-width: 1200px;
+        }
+
+        .logo-container {
+            width: 120px;
+            height: 120px;
+            margin: 0 auto 2rem;
+            padding: 1rem;
+            background: white;
+            border-radius: 50%;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+        }
+
+        .logo-container img {
+            width: 100%;
+            height: auto;
+            transition: all 0.3s ease;
+        }
+
+        .selection-container.expanded .logo-container {
+            width: 80px;
+            height: 80px;
+            margin-bottom: 1rem;
+        }
+
+        .select-wrapper {
+            position: relative;
+            margin-bottom: 1.5rem;
+            transition: all 0.3s ease;
+        }
+
+        .select-wrapper label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: var(--wspia-gray);
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+
+        .select-wrapper select {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            border: 2px solid #e5e7eb;
+            border-radius: 0.5rem;
+            appearance: none;
+            background-color: white;
+            transition: all 0.3s ease;
+        }
+
+        .select-wrapper select:focus {
+            outline: none;
+            border-color: var(--wspia-red);
+            box-shadow: 0 0 0 3px rgba(227, 30, 36, 0.1);
+        }
+
+        .select-wrapper::after {
+            content: '';
+            position: absolute;
+            right: 1rem;
+            top: 60%;
+            width: 0.8rem;
+            height: 0.8rem;
+            border-right: 2px solid var(--wspia-gray);
+            border-bottom: 2px solid var(--wspia-gray);
+            transform: translateY(-50%) rotate(45deg);
+            pointer-events: none;
+            transition: all 0.3s ease;
+        }
+
+        .selection-container h1 {
+            font-size: 2.5rem;
+            color: var(--wspia-gray);
+            text-align: center;
+            margin-bottom: 2rem;
+            transition: all 0.3s ease;
+        }
+
+        .selection-container.expanded h1 {
+            font-size: 2rem;
+            margin-bottom: 1rem;
+        }
+
+        .controls-section {
+            opacity: 0;
+            height: 0;
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .controls-section.visible {
+            opacity: 1;
+            height: auto;
+            margin-top: 1rem;
+        }
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 60px;
+            height: 34px;
+            margin: 0 8px;
+        }
+
+        .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #d1d5db;
+            transition: .4s;
+            border-radius: 34px;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 26px;
+            width: 26px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+
+        /* Red background when checked */
+        input:checked + .slider {
+            background-color: red;
+        }
+
+        input:checked + .slider:before {
+            transform: translateX(26px);
+        }
+
+        /* Week navigation buttons */
+        #prevWeekBtn,
+        #nextWeekBtn {
+            background-color: white !important;
+            border: 2px solid var(--wspia-red);
+            color: var(--wspia-red);
+            font-weight: 500;
+            padding: 0.5rem 1rem;
+            border-radius: 0.5rem;
+            transition: all 0.3s ease;
+            margin: 0 0.5rem;
+        }
+
+        #prevWeekBtn:hover:not(:disabled),
+        #nextWeekBtn:hover:not(:disabled) {
+            background-color: var(--wspia-red) !important;
+            border-color: var(--wspia-red);
+            color: white;
+        }
+
+        #prevWeekBtn:disabled,
+        #nextWeekBtn:disabled {
+            background-color: white !important;
+            border-color: #e5e7eb;
+            color: #9ca3af;
+        }
+
+        .button-content {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
     </style>
 </head>
 <body class="min-h-screen font-sans text-gray-800">
     <div class="server-status-container">
-    <div class="server-status-indicator" id="serverStatusIndicator"></div>
-    <span class="server-status-text" id="serverStatusText">Łączenie...</span>
-    <div class="server-status-tooltip" id="serverStatusTooltip"></div>
-</div>
+        <div class="server-status-indicator" id="serverStatusIndicator"></div>
+        <span class="server-status-text" id="serverStatusText">Łączenie...</span>
+        <div class="server-status-tooltip" id="serverStatusTooltip"></div>
+    </div>
     <div class="container mx-auto px-4 py-12">
-        <h1 class="text-5xl font-extrabold mb-6 text-center text-gray-700">Plan Lekcji</h1>
+        <div id="main-container" class="selection-container">
+            <div class="logo-container">
+                <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSAvu7fXk3m4Lz5iwLKJHAPKlelKnT8CjI-Bg&s" alt="WSPiA Logo" class="logo">
+            </div>
+            
+            <h1 class="text-4xl font-bold text-center mb-8">Plan Lekcji</h1>
         <div id="current-lesson-info" class="mb-6 p-4 bg-white rounded-lg shadow-md text-center"></div>
-        <div class="mb-8 max-w-md mx-auto space-y-4">
-            <div>
-                <label for="plan-select" class="block text-lg font-medium text-gray-700 mb-2">Wybierz plan:</label>
-                <select id="plan-select" class="custom-select block w-full px-4 py-3 text-base border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 rounded-lg shadow-sm bg-white">
+
+            <div class="select-wrapper">
+                <label for="plan-select" class="text-lg font-medium text-gray-700">Wybierz plan:</label>
+                <select id="plan-select" class="custom-select">
                     <option value="">Wybierz plan</option>
                     {% for collection_name, data in semesters.items() %}
                     <option value="{{ collection_name }}" data-groups='{{ data.groups|tojson }}'>{{ data.plan_name }}</option>
                     {% endfor %}
                 </select>
             </div>
-            <div>
-                <label for="group-select" class="block text-lg font-medium text-gray-700 mb-2">Wybierz grupę:</label>
-                <select id="group-select" class="custom-select block w-full px-4 py-3 text-base border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 rounded-lg shadow-sm bg-white" disabled>
+            <div class="select-wrapper">
+                <label for="group-select" class="text-lg font-medium text-gray-700">Wybierz grupę:</label>
+                <select id="group-select" class="custom-select" disabled>
                     <option value="">Najpierw wybierz plan</option>
                 </select>
             </div>
+        
+
+        <!-- Controls container - initially hidden -->
+        <div id="controls-container" class="hidden">
+            <div class="mb-4 flex items-center justify-center">
+                <label for="filter-toggle" class="mr-2">Filtruj plan dla wybranego tygodnia:</label>
+                <label class="switch">
+                    <input type="checkbox" id="filter-toggle" checked>
+                    <span class="slider"></span>
+                </label>
+                <button id="prevWeekBtn" class="ml-4 px-4 py-2 rounded disabled:opacity-50 disabled:cursor-not-allowed" disabled>
+                    <div class="button-content">
+                        <span>←</span>
+                        <span>Poprzedni tydzień</span>
+                    </div>
+                </button>
+                <button id="nextWeekBtn" class="ml-4 px-4 py-2 rounded disabled:opacity-50 disabled:cursor-not-allowed">
+                    <div class="button-content">
+                        <span>Następny tydzień</span>
+                        <span>→</span>
+                    </div>
+                </button>
+            </div>
         </div>
-        <div class="mb-4 flex items-center justify-center">
-            <label for="filter-toggle" class="mr-2">Filtruj plan dla wybranego tygodnia:</label>
-            <label class="switch">
-                <input type="checkbox" id="filter-toggle" checked>
-                <span class="slider"></span>
-            </label>
-            <button id="prevWeekBtn" class="ml-4 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed" disabled>Poprzedni tydzień</button>
-            <button id="nextWeekBtn" class="ml-4 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed">Następny tydzień</button>
-        </div>
+
         <div id="plan-container" class="bg-white p-8 rounded-lg shadow-lg mb-12 hidden">
             <h2 id="group-name" class="text-3xl font-bold mb-3 text-gray-800"></h2>
             <p id="week-range" class="text-xl font-semibold mb-3 text-gray-700"></p>
@@ -245,8 +488,12 @@
             <div id="plan-content" class="overflow-x-auto"></div>
         </div>
 
-        <h2 class="text-4xl font-bold mb-8 text-center text-gray-700">Porównania planów dla wybranej grupy</h2>
-        <div id="comparisons-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8"></div>
+        <!-- Comparisons section - initially hidden -->
+        <div id="comparisons-section" class="hidden">
+            <h2 class="text-4xl font-bold mb-8 text-center text-gray-700">Porównania planów dla wybranej grupy</h2>
+            <div id="comparisons-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8"></div>
+        </div>
+        </div>
     </div>
     <script>
         const planSelect = document.getElementById('plan-select');
@@ -261,7 +508,29 @@
         let countdownInterval;
         let lastSelectedPlan = loadSelectedPlan();
         let lastSelectedGroup = loadSelectedGroup();
-
+        function updateInterfaceState() {
+            const mainContainer = document.getElementById('main-container');
+            const selectedPlan = planSelect.value;
+            const selectedGroup = groupSelect.value;
+            const controlsContainer = document.getElementById('controls-container');
+            const comparisonsSection = document.getElementById('comparisons-section');
+            
+            if (selectedPlan && selectedGroup) {
+                mainContainer.classList.add('expanded');
+                if (controlsContainer) controlsContainer.classList.add('visible');
+                if (comparisonsSection) comparisonsSection.classList.remove('hidden');
+                document.querySelectorAll('.select-wrapper').forEach(wrapper => {
+                    wrapper.style.marginBottom = '1rem';
+                });
+            } else {
+                mainContainer.classList.remove('expanded');
+                if (controlsContainer) controlsContainer.classList.remove('visible');
+                if (comparisonsSection) comparisonsSection.classList.add('hidden');
+                document.querySelectorAll('.select-wrapper').forEach(wrapper => {
+                    wrapper.style.marginBottom = '1.5rem';
+                });
+            }
+        }
         function getWeekRange(date) {
             const startOfWeek = new Date(date);
             startOfWeek.setDate(date.getDate() - date.getDay() + (date.getDay() === 0 ? -6 : 1));
@@ -391,6 +660,8 @@
             groupSelect.value = '';
             planContainer.classList.add('hidden');
             comparisonsContainer.innerHTML = '';
+            updateControlsVisibility();
+            updateInterfaceState();
         });
         function startCountdown(endTime) {
             clearInterval(countdownInterval);
@@ -474,17 +745,6 @@
         }
 
             function highlightCurrentTimeSlot() {
-    if (!filterToggle.checked) {
-        // Wyczyść wszystkie podświetlenia i informacje o czasie
-        const infoElement = document.getElementById('current-lesson-info');
-        infoElement.innerHTML = '';
-        document.querySelectorAll('.current-time-highlight').forEach(cell => {
-            cell.classList.remove('current-time-highlight');
-        });
-        clearInterval(countdownInterval);
-        return;
-    }
-    
     console.log("Rozpoczęcie funkcji highlightCurrentTimeSlot");
     const now = new Date();
     const currentDay = now.getDay();
@@ -715,31 +975,26 @@
                     const comparisons = comparisonsResponse.data;
                     console.log("Otrzymane porównania:", comparisons);
 
-                    if (!comparisons || comparisons.length === 0) {
-                        comparisonsContainer.innerHTML = '<p class="text-xl text-center text-gray-600">Brak porównań dla wybranego planu.</p>';
-                    } else {
-                        const filteredComparisons = comparisons.filter(comparison => {
+                    comparisonsContainer.innerHTML = comparisons
+                        .filter(comparison => {
                             console.log("Sprawdzanie porównania:", comparison);
                             console.log("Wyniki dla grupy:", comparison.results?.[selectedGroup]);
                             return comparison.results?.[selectedGroup]?.trim() !== "Brak różnic.";
-                        });
+                        })
+                        .map((comparison, index) => `
+                            <div class="comparison-card ${colors[index % colors.length]} p-6 rounded-lg shadow-md border-l-4">
+                                <h3 class="text-xl font-semibold mb-3">Porównanie z ${new Date(comparison.timestamp).toLocaleString()}</h3>
+                                <p class="mb-1"><strong>Nowszy plan:</strong> ${new Date(comparison.newer_plan_timestamp).toLocaleString()}</p>
+                                <p class="mb-1"><strong>Starszy plan:</strong> ${new Date(comparison.older_plan_timestamp).toLocaleString()}</p>
+                                <div class="mt-3">
+                                    <h4 class="font-semibold mb-2">Zmiany:</h4>
+                                    <p>${comparison.results[selectedGroup]}</p>
+                                </div>
+                            </div>
+                        `).join('');
 
-                        if (filteredComparisons.length === 0) {
-                            comparisonsContainer.innerHTML = '<p class="text-xl text-center text-gray-600">Brak zmian w ostatnich porównaniach.</p>';
-                        } else {
-                            comparisonsContainer.innerHTML = filteredComparisons
-                                .map((comparison, index) => `
-                                    <div class="comparison-card ${colors[index % colors.length]} p-6 rounded-lg shadow-md border-l-4">
-                                        <h3 class="text-xl font-semibold mb-3">Porównanie z ${new Date(comparison.timestamp).toLocaleString()}</h3>
-                                        <p class="mb-1"><strong>Nowszy plan:</strong> ${new Date(comparison.newer_plan_timestamp).toLocaleString()}</p>
-                                        <p class="mb-1"><strong>Starszy plan:</strong> ${new Date(comparison.older_plan_timestamp).toLocaleString()}</p>
-                                        <div class="mt-3">
-                                            <h4 class="font-semibold mb-2">Zmiany:</h4>
-                                            <p>${comparison.results[selectedGroup]}</p>
-                                        </div>
-                                    </div>
-                                `).join('');
-                        }
+                    if (comparisonsContainer.innerHTML === '') {
+                        comparisonsContainer.innerHTML = '<p class="text-xl text-center text-gray-600">Brak zmian w ostatnich porównaniach.</p>';
                     }
 
                         } catch (error) {
@@ -786,6 +1041,8 @@
             const selectedGroup = event.target.value;
             saveSelectedGroup(selectedGroup);
             await loadPlanAndComparisons(selectedPlan, selectedGroup);
+            updateControlsVisibility();
+            updateInterfaceState();
         });
 
         function filterPlanForCurrentWeek(table, weekRange) {
@@ -861,26 +1118,26 @@
         function toggleFilterPlan() {
             const isChecked = filterToggle.checked;
             setCookie('filterToggle', isChecked, 7); // Save state for 7 days
-            
-            // Wyczyść interwały czasowe
-            clearInterval(countdownInterval);
-            const timeUpdateInterval = window.timeUpdateInterval;
-            if (timeUpdateInterval) {
-                clearInterval(timeUpdateInterval);
-            }
-            
-            // Ustaw nowe interwały jeśli filtrowanie jest włączone
-            if (isChecked) {
-                window.timeUpdateInterval = setInterval(updateTimeSinceLastUpdate, 60000);
-            }
-            
             const selectedPlan = planSelect.value;
             const selectedGroup = groupSelect.value;
             if (selectedPlan && selectedGroup) {
                 loadPlanAndComparisons(selectedPlan, selectedGroup);
             }
         }
-
+        function updateControlsVisibility() {
+            const selectedPlan = planSelect.value;
+            const selectedGroup = groupSelect.value;
+            const controlsContainer = document.getElementById('controls-container');
+            const comparisonsSection = document.getElementById('comparisons-section');
+            
+            if (selectedPlan && selectedGroup) {
+                controlsContainer.classList.remove('hidden');
+                comparisonsSection.classList.remove('hidden');
+            } else {
+                controlsContainer.classList.add('hidden');
+                comparisonsSection.classList.add('hidden');
+            }
+        }
         window.addEventListener('DOMContentLoaded', async () => {
             const filterToggleState = getCookie('filterToggle');
             if (filterToggleState !== null) {
@@ -895,10 +1152,8 @@
                     groupSelect.value = lastSelectedGroup;
                     await loadPlanAndComparisons(lastSelectedPlan, lastSelectedGroup);
                 }
-                // Aktualizuj czas co minutę tylko gdy filtrowanie jest włączone
-                if (filterToggle.checked) {
-                    setInterval(updateTimeSinceLastUpdate, 60000);
-                }
+                // Aktualizuj czas co minutę
+                setInterval(updateTimeSinceLastUpdate, 60000);
             }
             checkServerStatus();
             
@@ -911,6 +1166,8 @@
 
             // Inicjalizacja stanu przycisków
             updateWeekButtons();
+            updateControlsVisibility();
+            updateInterfaceState();
         });
         let lastUpdateTime = null;
         async function checkServerStatus() {
