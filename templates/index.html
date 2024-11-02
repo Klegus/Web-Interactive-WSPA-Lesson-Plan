@@ -210,16 +210,21 @@
         /* WSPiA-specific enhancements */
         button {
             transition: all 0.3s ease;
-            background-color: var(--wspia-red) !important;
+            color: var(--wspia-red);
+            background-color: white !important;
+            border: 2px solid var(--wspia-red) !important;
         }
         
         button:hover:not(:disabled) {
-            background-color: #c41a1f !important;
+            color: white;
+            background-color: var(--wspia-red) !important;
             transform: translateY(-1px);
         }
 
         button:disabled {
-            background-color: var(--wspia-gray) !important;
+            color: var(--wspia-gray);
+            background-color: white !important;
+            border-color: var(--wspia-gray) !important;
         }
 
         select:focus {
