@@ -558,49 +558,97 @@
             const currentDay = now.getDay();
             const currentHour = now.getHours();
             const currentMinutes = now.getMinutes();
-            return (currentDay === 5 && (currentHour > 21 || (currentHour === 21 && currentMinutes >= 15))) || currentDay === 6 || currentDay === 0; // Piątek po 21:15 lub weekend
+            
+            return (currentDay === 5 && (currentHour > 21 || (currentHour === 21 && currentMinutes >= 15))) || 
+                currentDay === 6 || 
+                currentDay === 0;
         }
 
         let currentWeekOffset = 0;
 
         function getCurrentOrNextWeekRange() {
-            let date = new Date();
-            if (shouldShowNextWeek()) {
-                currentWeekOffset = 1;
-            }
-            date.setDate(date.getDate() + (7 * currentWeekOffset));
-            return getWeekRange(date);
+    let date = new Date();
+    
+    if (shouldShowNextWeek()) {
+        // Znajdź następny poniedziałek
+        while (date.getDay() !== 1) {
+            date.setDate(date.getDate() + 1);
         }
+        // Dodaj dodatkowy tydzień jeśli currentWeekOffset > 0
+        if (currentWeekOffset > 0) {
+            date.setDate(date.getDate() + 7);
+        }
+    } else {
+        date.setDate(date.getDate() + (7 * currentWeekOffset));
+    }
+    
+    return getWeekRange(date);
+}
+
 
         function moveToNextWeek() {
-            if (currentWeekOffset < 1) {
-                currentWeekOffset++;
-                updateWeekButtons();
-                const selectedGroup = groupSelect.value;
-                if (selectedGroup) {
-                    loadPlanAndComparisons(selectedGroup);
+            const isWeekend = new Date().getDay() === 0 || new Date().getDay() === 6;
+            
+            if (isWeekend) {
+                // W weekend pokazujemy następny tydzień jako "bieżący"
+                if (currentWeekOffset < 1) {
+                    currentWeekOffset++;
+                    updateWeekButtons();
+                    const selectedGroup = groupSelect.value;
+                    if (selectedGroup) {
+                        loadPlanAndComparisons(planSelect.value, selectedGroup);
+                    }
+                }
+            } else {
+                // Normalne zachowanie w dni robocze
+                if (currentWeekOffset < 1) {
+                    currentWeekOffset++;
+                    updateWeekButtons();
+                    const selectedGroup = groupSelect.value;
+                    if (selectedGroup) {
+                        loadPlanAndComparisons(planSelect.value, selectedGroup);
+                    }
                 }
             }
         }
 
         function moveToPrevWeek() {
-            if (currentWeekOffset > 0) {
-                currentWeekOffset--;
-                updateWeekButtons();
-                const selectedGroup = groupSelect.value;
-                if (selectedGroup) {
-                    loadPlanAndComparisons(selectedGroup);
-                }
-            }
+    if (shouldShowNextWeek() && currentWeekOffset > 0) {
+        // W weekend pozwól na cofnięcie do najbliższego tygodnia
+        currentWeekOffset--;
+        updateWeekButtons();
+        const selectedGroup = groupSelect.value;
+        if (selectedGroup) {
+            loadPlanAndComparisons(planSelect.value, selectedGroup);
         }
+    } else if (!shouldShowNextWeek() && currentWeekOffset > 0) {
+        // Normalne zachowanie w dni robocze
+        currentWeekOffset--;
+        updateWeekButtons();
+        const selectedGroup = groupSelect.value;
+        if (selectedGroup) {
+            loadPlanAndComparisons(planSelect.value, selectedGroup);
+        }
+    }
+}
 
-        function updateWeekButtons() {
-            const prevWeekBtn = document.getElementById('prevWeekBtn');
-            const nextWeekBtn = document.getElementById('nextWeekBtn');
-            
-            prevWeekBtn.disabled = currentWeekOffset === 0;
-            nextWeekBtn.disabled = currentWeekOffset === 1;
-        }
+function updateWeekButtons() {
+    const prevWeekBtn = document.getElementById('prevWeekBtn');
+    const nextWeekBtn = document.getElementById('nextWeekBtn');
+    
+    if (shouldShowNextWeek()) {
+        // W weekend:
+        // - Zablokuj "poprzedni tydzień" tylko gdy jesteśmy w najbliższym tygodniu
+        // - Pozwól na przejście jeden tydzień do przodu
+        prevWeekBtn.disabled = currentWeekOffset === 0;
+        nextWeekBtn.disabled = currentWeekOffset >= 1;
+    } else {
+        // Normalne zachowanie w dni robocze
+        prevWeekBtn.disabled = currentWeekOffset === 0;
+        nextWeekBtn.disabled = currentWeekOffset === 1;
+    }
+}
+
         const colors = [
             'bg-blue-50 border-blue-200 text-blue-800',
             'bg-green-50 border-green-200 text-green-800',
@@ -752,30 +800,37 @@
             return `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
         }
 
-            function highlightCurrentTimeSlot() {
-    console.log("Rozpoczęcie funkcji highlightCurrentTimeSlot");
-    const now = new Date();
-    const currentDay = now.getDay();
-    const currentTime = now.getHours() * 60 + now.getMinutes();
-    console.log(`Aktualny czas: ${now.getHours()}:${now.getMinutes()}, dzień tygodnia: ${currentDay}`);
+        function highlightCurrentTimeSlot() {
+            console.log("Rozpoczęcie funkcji highlightCurrentTimeSlot");
+            const now = new Date();
+            const currentDay = now.getDay();
+            const currentTime = now.getHours() * 60 + now.getMinutes();
+            console.log(`Aktualny czas: ${now.getHours()}:${now.getMinutes()}, dzień tygodnia: ${currentDay}`);
 
-    const table = document.querySelector('#plan-content table');
-    if (!table) {
-        console.log("Nie znaleziono tabeli z planem lekcji");
-        return;
-    }
+            // Jeśli jest weekend, tylko wyświetl informację
+            if (currentDay === 0 || currentDay === 6) {
+                const infoElement = document.getElementById('current-lesson-info');
+                infoElement.innerHTML = "Weekend! Czas wolny od zajęć 🎉";
+                return; // Zakończ funkcję, nie próbuj podświetlać
+            }
 
-    const rows = table.querySelectorAll('tr');
-    const dayNames = ['Niedziela', 'Poniedziałek', 'Wtorek', 'Środa', 'Czwartek', 'Piątek', 'Sobota'];
-    let currentDayColumn = -1;
+            const table = document.querySelector('#plan-content table');
+            if (!table) {
+                console.log("Nie znaleziono tabeli z planem lekcji");
+                return;
+            }
 
-    const headerRow = rows[0];
-    headerRow.querySelectorAll('th').forEach((th, index) => {
-        if (th.textContent.trim().startsWith(dayNames[currentDay])) {
-            currentDayColumn = index;
-            console.log(`Znaleziono kolumnę dla ${dayNames[currentDay]}: ${currentDayColumn}`);
-        }
-    });
+            const rows = table.querySelectorAll('tr');
+            const dayNames = ['Niedziela', 'Poniedziałek', 'Wtorek', 'Środa', 'Czwartek', 'Piątek', 'Sobota'];
+            let currentDayColumn = -1;
+
+            const headerRow = rows[0];
+            headerRow.querySelectorAll('th').forEach((th, index) => {
+                if (th.textContent.trim().startsWith(dayNames[currentDay])) {
+                    currentDayColumn = index;
+                    console.log(`Znaleziono kolumnę dla ${dayNames[currentDay]}: ${currentDayColumn}`);
+                }
+        });
 
     if (currentDayColumn === -1) {
         console.log("Nie znaleziono kolumny dla aktualnego dnia tygodnia");
@@ -1054,56 +1109,49 @@
         });
 
         function filterPlanForCurrentWeek(table, weekRange) {
-            if (!table) return;
+    if (!table) return;
 
-            const rows = table.querySelectorAll('tr');
-            const weekDays = ['Poniedziałek', 'Wtorek', 'Środa', 'Czwartek', 'Piątek'];
-            
-            // Aktualizuj nagłówki z datami
-            const headerRow = rows[0];
-            const headerCells = headerRow.querySelectorAll('th');
-            headerCells.forEach((cell, index) => {
-                if (index > 0 && index <= 5) { // Pomijamy pierwszą kolumnę (godziny)
-                    const dayOfWeek = index - 1;
-                    const date = new Date(weekRange.start);
-                    date.setDate(weekRange.start.getDate() + dayOfWeek);
-                    const originalText = cell.textContent.split('(')[0].trim(); // Zachowaj oryginalną nazwę dnia
-                    cell.textContent = `${originalText} (${formatDate(date).slice(0, 5)})`;
-                }
-            });
+    const rows = table.querySelectorAll('tr');
+    const headerRow = rows[0];
+    const headerCells = headerRow.querySelectorAll('th');
+    
+    // Aktualizuj nagłówki z datami
+    headerCells.forEach((cell, index) => {
+        if (index > 0 && index <= 5) { // Pomijamy pierwszą kolumnę (godziny)
+            const dayOfWeek = index - 1;
+            const date = new Date(weekRange.start);
+            date.setDate(weekRange.start.getDate() + dayOfWeek);
+            const originalText = cell.textContent.split('(')[0].trim(); // Zachowaj oryginalną nazwę dnia
+            cell.textContent = `${originalText} (${formatDate(date).slice(0, 5)})`;
+        }
+    });
 
-            // Filtruj wiersze z lekcjami
-            for (let i = 1; i < rows.length; i++) {
-                const row = rows[i];
-                const cells = row.querySelectorAll('td');
-                let hasLessonsInWeek = false;
+    // Filtruj wiersze z lekcjami
+    for (let i = 1; i < rows.length; i++) {
+        const row = rows[i];
+        const cells = row.querySelectorAll('td');
+        let hasLessonsInWeek = false;
 
-                cells.forEach((cell, cellIndex) => {
-                    if (cellIndex === 0) return; // Pomijamy kolumnę z godzinami
+        cells.forEach((cell, cellIndex) => {
+            if (cellIndex === 0) return; // Pomijamy kolumnę z godzinami
 
-                    const cellContent = cell.innerHTML;
-                    if (cellContent && cellContent.trim() !== '') {
-                        // Sprawdź, czy komórka zawiera datę z bieżącego tygodnia
-                        const currentDate = new Date(weekRange.start);
-                        currentDate.setDate(weekRange.start.getDate() + (cellIndex - 1));
-                        const dateStr = formatDate(currentDate).slice(0, 5); // Format: DD.MM
-                        
-                        if (!cellContent.includes(dateStr)) {
-                            cell.innerHTML = ''; // Wyczyść komórkę, jeśli data nie pasuje
-                        } else {
-                            hasLessonsInWeek = true;
-                        }
-                    }
-                });
-
-                // Usuń wiersz, jeśli nie ma w nim żadnych lekcji w tym tygodniu
-                if (!hasLessonsInWeek) {
-                    row.style.display = 'none';
+            const cellContent = cell.innerHTML;
+            if (cellContent && cellContent.trim() !== '') {
+                const currentDate = new Date(weekRange.start);
+                currentDate.setDate(weekRange.start.getDate() + (cellIndex - 1));
+                const dateStr = formatDate(currentDate).slice(0, 5);
+                
+                if (!cellContent.includes(dateStr)) {
+                    cell.innerHTML = '';
                 } else {
-                    row.style.display = '';
+                    hasLessonsInWeek = true;
                 }
             }
-        }
+        });
+
+        row.style.display = hasLessonsInWeek ? '' : 'none';
+    }
+}
 
         function setCookie(name, value, days) {
             const date = new Date();
