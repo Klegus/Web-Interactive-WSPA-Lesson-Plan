@@ -397,12 +397,13 @@
         #nextWeekBtn {
             background-color: white !important;
             border: 2px solid var(--wspia-red);
-            color: var(--wspia-red);
+            color: black;
             font-weight: 500;
             padding: 0.5rem 1rem;
             border-radius: 0.5rem;
             transition: all 0.3s ease;
             margin: 0 0.5rem;
+            box-shadow: 0 0 5px var(--wspia-red);
         }
 
         #prevWeekBtn:hover:not(:disabled),
@@ -410,6 +411,7 @@
             background-color: var(--wspia-red) !important;
             border-color: var(--wspia-red);
             color: white;
+            box-shadow: 0 0 10px var(--wspia-red);
         }
 
         #prevWeekBtn:disabled,
@@ -417,6 +419,7 @@
             background-color: white !important;
             border-color: #e5e7eb;
             color: #9ca3af;
+            box-shadow: none;
         }
 
         .button-content {
@@ -481,7 +484,7 @@
             </div>
         </div>
 
-        <div id="plan-container" class="bg-white p-8 rounded-lg shadow-lg mb-12 hidden">
+        <div id="plan-container" class="bg-white p-8 rounded-lg shadow-lg mb-12 hidden w-full">
             <h2 id="group-name" class="text-3xl font-bold mb-3 text-gray-800"></h2>
             <p id="week-range" class="text-xl font-semibold mb-3 text-gray-700"></p>
             <p id="plan-date" class="mb-6 text-gray-600"></p>
