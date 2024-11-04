@@ -91,7 +91,7 @@ async def get_plan(collection_name: str, group_name: str):
                 }
             )
         
-        plan_html = latest_plan["groups"][group_name].replace('\n', '')
+        plan_html = latest_plan["groups"][group_name].replace('\n', ' ')
         #print(f"Długość pobranego HTML: {len(plan_html)}")
         #print(f"Fragment HTML: {plan_html[:200]}...")  # Pokaż początek planu
         
