@@ -87,9 +87,19 @@
                 background-color: rgba(227, 30, 36, 0.1);
             }
         }
+        #plan-content {
+            position: relative;
+        }
         #plan-content table {
             table-layout: fixed;
             width: 100%;
+        }
+        #plan-content thead {
+            position: sticky;
+            top: 0;
+            z-index: 10;
+            background: white;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
         #plan-content td {
             text-align: center;
@@ -114,7 +124,12 @@
                 scroll-snap-type: x mandatory;
             }
             #plan-content table {
-                min-width: 640px;
+                min-width: 480px;
+                font-size: 0.85rem;
+            }
+            #plan-content td {
+                padding: 0.5rem 0.25rem;
+                height: 50px;
             }
             #plan-content td {
                 scroll-snap-align: center;
