@@ -21,4 +21,4 @@ ENV FLASK_APP=main.py
 ENV FLASK_ENV=production
 
 # Run the application
-CMD ["gunicorn", "--bind", "0.0.0.0:80", "main:app"]
+CMD ["python", "main.py"]
