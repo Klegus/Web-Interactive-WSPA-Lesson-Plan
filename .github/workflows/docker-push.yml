@@ -1,12 +1,12 @@
 name: Docker Build and Deploy
 on:
   push:
-    branches: [ "main" ]
+    branches: [ "dev" ]
   pull_request:
-    branches: [ "main" ]
+    branches: [ "dev" ]
 env:
   REGISTRY: registry.klegus.tech
-  IMAGE_NAME: semester-api
+  IMAGE_NAME: www-plan
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
@@ -48,10 +48,10 @@ jobs:
           script: |
             docker login ${{ env.REGISTRY }} -u ${{ secrets.REGISTRY_USERNAME }} -p ${{ secrets.REGISTRY_PASSWORD }}
             docker pull ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
-            docker stop semester-api || true
-            docker rm semester-api || true
+            docker stop www-plan || true
+            docker rm www-plan || true
             docker run -d \
-              --name semester-api \
+              --name www-plan \
               --restart unless-stopped \
-              -p 8080:80 \
+              -p 8088:80 \
               ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
