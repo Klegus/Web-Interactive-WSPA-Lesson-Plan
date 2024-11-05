@@ -28,7 +28,7 @@ if not MONGO_URI:
 # Połączenie z MongoDB
 try:
     client = MongoClient(MONGO_URI)
-    db = client['Lesson']
+    db = client['Lesson_dev']
     client.admin.command('ismaster')
     print("Successfully connected to MongoDB")
 except Exception as e:
