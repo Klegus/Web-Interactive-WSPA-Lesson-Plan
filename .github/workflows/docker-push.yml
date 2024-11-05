@@ -54,4 +54,8 @@ jobs:
               --name www-plan \
               --restart unless-stopped \
               -p 8088:80 \
+              -e COMPARER="${{ secrets.COMPARER }}" \
+              -e MONGO_URI="${{ secrets.MONGO_URI }}" \
+              -e DEV="${{ secrets.DEV }}" \
+              -e BACKEND_URL="${{ secrets.BACKEND_URL }}" \
               ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
