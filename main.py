@@ -64,7 +64,8 @@ async def read_root(request: Request):
         
         return templates.TemplateResponse("index.html", {
             "request": request,
-            "semesters": semesters_data
+            "semesters": semesters_data,
+            "show_comparer": COMPARER
         })
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
