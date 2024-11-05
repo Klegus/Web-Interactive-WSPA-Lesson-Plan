@@ -518,6 +518,7 @@
         </div>
     </div>
     <script>
+        const showComparer = {{ show_comparer|tojson }};
         const planSelect = document.getElementById('plan-select');
         const groupSelect = document.getElementById('group-select');
         const planContainer = document.getElementById('plan-container');
@@ -1203,7 +1204,11 @@ function updateWeekButtons() {
             
             if (selectedPlan && selectedGroup) {
                 controlsContainer.classList.remove('hidden');
-                comparisonsSection.classList.remove('hidden');
+                if (showComparer) {
+                    comparisonsSection.classList.remove('hidden');
+                } else {
+                    comparisonsSection.classList.add('hidden');
+                }
             } else {
                 controlsContainer.classList.add('hidden');
                 comparisonsSection.classList.add('hidden');

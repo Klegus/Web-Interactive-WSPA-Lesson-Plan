@@ -20,6 +20,7 @@ else:
     MONGO_URI = os.environ.get("MONGO_URI")
     DEV = os.environ.get("DEV")
     BACKEND_URL = os.environ.get("BACKEND_URL")
+    COMPARER = os.environ.get("COMPARER", "false").lower() == "true"
 
 if not MONGO_URI:
     raise ValueError("MONGO_URI environment variable is not set")
