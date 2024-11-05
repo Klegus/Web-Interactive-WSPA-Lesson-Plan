@@ -53,7 +53,7 @@ jobs:
             docker run -d \
               --name www-plan \
               --restart unless-stopped \
-              -p 8088:80 \
+              -p 80:8088 \
               -e COMPARER="${{ secrets.COMPARER }}" \
               -e MONGO_URI="${{ secrets.MONGO_URI }}" \
               -e DEV="${{ secrets.DEV }}" \
