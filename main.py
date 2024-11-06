@@ -6,35 +6,8 @@ from fastapi.staticfiles import StaticFiles
 from pymongo import MongoClient
 from mangum import Mangum
 from typing import List, Dict
-from bs4 import BeautifulSoup
-import re
 
 app = FastAPI()
-
-from markupsafe import Markup
-
-def format_cell_content(content: str, category: str) -> str:
-    """Format cell content based on category."""
-    if category != 'st':
-        lines = [line.strip() for line in content.split('\n') if line.strip()]
-        if not lines:
-            return content
-            
-        formatted_lines = []
-        # First line is always the subject name
-        if lines:
-            formatted_lines.append(
-                f'<div class="mb-2">'
-                f'<span class="text-red-600 font-bold">{lines[0]}</span>'
-                f'</div>'
-            )
-            # Rest of the lines are regular text
-            for line in lines[1:]:
-                formatted_lines.append(
-                    f'<div class="mb-1">{line}</div>'
-                )
-        return Markup(''.join(formatted_lines))
-    return content
 
 # Konfiguracja środowiska
 if not os.environ.get("MONGO_URI"):
@@ -123,24 +96,10 @@ async def get_plan(collection_name: str, group_name: str):
                 }
             )
         
-        plan_html = latest_plan["groups"][group_name]
-        category = latest_plan.get("category", "st")
-        
-        if category != 'st':
-            # Parse and format HTML
-            soup = BeautifulSoup(plan_html, 'html.parser')
-            table = soup.find('table')
-            if table:
-                # Format all cells except first row and first column
-                for row_idx, row in enumerate(table.find_all('tr')):
-                    if row_idx == 0:  # Skip header row
-                        continue
-                    for cell_idx, cell in enumerate(row.find_all('td')):
-                        if cell_idx == 0:  # Skip first column
-                            continue
-                        cell.string = format_cell_content(cell.get_text(), category)
-                plan_html = str(soup)
-
+        plan_html = latest_plan["groups"][group_name].replace('\n', ' ')
+        #print(f"Długość pobranego HTML: {len(plan_html)}")
+        #print(f"Fragment HTML: {plan_html[:200]}...")  # Pokaż początek planu
+    
         response = {
             "plan_name": latest_plan["plan_name"],
             "group_name": group_name,
@@ -198,6 +157,6 @@ async def get_status():
 if DEV == 'True':
     if __name__ == "__main__":
         import uvicorn
-        uvicorn.run(app, host="127.0.0.1", port=8088)
+        uvicorn.run(app, host="0.0.0.0", port=8088)
 else:
     handler = Mangum(app)
