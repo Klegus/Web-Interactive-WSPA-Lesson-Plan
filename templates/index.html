@@ -1124,7 +1124,7 @@ function updateWeekButtons() {
             updateInterfaceState();
         });
 
-        function filterPlanForCurrentWeek(table, weekRange) {
+        function filterPlanForCurrentWeek(table, weekRange, planData) {
     if (!table) return;
 
     const rows = table.querySelectorAll('tr');
@@ -1132,7 +1132,7 @@ function updateWeekButtons() {
     const headerCells = headerRow.querySelectorAll('th');
     
     // Określ dni tygodnia na podstawie kategorii planu
-    const category = planResponse.data.category || 'st';
+    const category = planData.category || 'st';
     let daysConfig;
     switch (category) {
         case 'nst':
