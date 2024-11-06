@@ -716,15 +716,15 @@ function updateWeekButtons() {
 
         const categorySelect = document.getElementById('category-select');
 
-        function updatePlanSelect(category) {
-            planSelect.disabled = !category;
+        function updatePlanSelect(selectedCategory) {
+            planSelect.disabled = !selectedCategory;
             planSelect.innerHTML = '<option value="">Wybierz plan</option>';
             groupSelect.disabled = true;
             groupSelect.innerHTML = '<option value="">Najpierw wybierz plan</option>';
             planContainer.classList.add('hidden');
             comparisonsContainer.innerHTML = '';
             
-            if (category) {
+            if (selectedCategory) {
                 // First clear any existing options except the default one
                 Array.from(planSelect.options).forEach(option => {
                     if (option.value) {
@@ -738,21 +738,23 @@ function updateWeekButtons() {
                         collection: "{{ collection_name }}",
                         name: "{{ data.plan_name }}",
                         groups: {{ data.groups|tojson }},
-                        category: "{{ data.get('category', 'st') }}"
+                        category: "{{ data.category }}"
                     },
                     {% endfor %}
                 };
         
                 // Add options for the selected category
-                Object.values(semesters).forEach(semester => {
-                    if (semester.category === category) {
+                Object.values(semesters)
+                    .filter(semester => semester.category === selectedCategory)
+                    .sort((a, b) => a.name.localeCompare(b.name))
+                    .forEach(semester => {
                         const option = document.createElement('option');
                         option.value = semester.collection;
                         option.textContent = semester.name;
                         option.dataset.groups = JSON.stringify(semester.groups);
+                        option.dataset.category = semester.category;
                         planSelect.appendChild(option);
-                    }
-                });
+                    });
             }
         }
 
