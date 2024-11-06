@@ -1226,81 +1226,82 @@ function updateWeekButtons() {
         });
 
         function filterPlanForCurrentWeek(table, weekRange, planData) {
-    if (!table) return;
-
-    const rows = table.querySelectorAll('tr');
-    const headerRow = rows[0];
-    const headerCells = headerRow.querySelectorAll('th');
-    
-    // Określ dni tygodnia na podstawie kategorii planu
-    const category = planData.category || 'st';
-    let daysConfig;
-    switch (category) {
-        case 'nst':
-            daysConfig = {
-                startDay: 4, // Piątek
-                numberOfDays: 3, // Piątek, Sobota, Niedziela
-                dayNames: ["Godziny", "Piątek", "Sobota", "Niedziela"]
-            };
-            break;
-        case 'nst-puw':
-            daysConfig = {
-                startDay: 5, // Sobota
-                numberOfDays: 2, // Sobota, Niedziela
-                dayNames: ["Godziny", "Sobota", "Niedziela"]
-            };
-            break;
-        default: // 'st'
-            daysConfig = {
-                startDay: 0, // Poniedziałek
-                numberOfDays: 5, // Poniedziałek-Piątek
-                dayNames: ["Godziny", "Poniedziałek", "Wtorek", "Środa", "Czwartek", "Piątek"]
-            };
-    }
-    
-    // Aktualizuj nagłówki z datami
-    headerCells.forEach((cell, index) => {
-        if (index > 0 && index <= daysConfig.numberOfDays) {
-            const dayOfWeek = daysConfig.startDay + (index - 1);
-            const date = new Date(weekRange.start);
-            date.setDate(weekRange.start.getDate() + dayOfWeek);
-            const originalText = cell.textContent.split('(')[0].trim();
-            cell.textContent = `${originalText} (${formatDate(date).slice(0, 5)})`;
-        }
-    });
-
-    // Filtruj wiersze z lekcjami
-    for (let i = 1; i < rows.length; i++) {
-        const row = rows[i];
-        const cells = row.querySelectorAll('td');
-        let hasLessonsInWeek = false;
-
-        cells.forEach((cell, cellIndex) => {
-            if (cellIndex === 0) return; // Pomijamy kolumnę z godzinami
-
-            if (cellIndex > daysConfig.numberOfDays) {
-                cell.style.display = 'none';
-                return;
+            if (!table) return;
+        
+            const rows = table.querySelectorAll('tr');
+            const headerRow = rows[0];
+            const headerCells = headerRow.querySelectorAll('th');
+            
+            // Określ dni tygodnia na podstawie kategorii planu
+            const category = planData.category || 'st';
+            let daysConfig;
+            switch (category) {
+                case 'nst':
+                case 'nst-online':  // Added this case to handle nst-online
+                    daysConfig = {
+                        startDay: 4, // Piątek
+                        numberOfDays: 3, // Piątek, Sobota, Niedziela
+                        dayNames: ["Godziny", "Piątek", "Sobota", "Niedziela"]
+                    };
+                    break;
+                case 'nst-puw':
+                    daysConfig = {
+                        startDay: 5, // Sobota
+                        numberOfDays: 2, // Sobota, Niedziela
+                        dayNames: ["Godziny", "Sobota", "Niedziela"]
+                    };
+                    break;
+                default: // 'st'
+                    daysConfig = {
+                        startDay: 0, // Poniedziałek
+                        numberOfDays: 5, // Poniedziałek-Piątek
+                        dayNames: ["Godziny", "Poniedziałek", "Wtorek", "Środa", "Czwartek", "Piątek"]
+                    };
             }
-
-            const cellContent = cell.innerHTML;
-            if (cellContent && cellContent.trim() !== '') {
-                const dayOfWeek = daysConfig.startDay + (cellIndex - 1);
-                const currentDate = new Date(weekRange.start);
-                currentDate.setDate(weekRange.start.getDate() + dayOfWeek);
-                const dateStr = formatDate(currentDate).slice(0, 5);
-                
-                if (!cellContent.includes(dateStr)) {
-                    cell.innerHTML = '';
-                } else {
-                    hasLessonsInWeek = true;
+            
+            // Aktualizuj nagłówki z datami
+            headerCells.forEach((cell, index) => {
+                if (index > 0 && index <= daysConfig.numberOfDays) {
+                    const dayOfWeek = daysConfig.startDay + (index - 1);
+                    const date = new Date(weekRange.start);
+                    date.setDate(weekRange.start.getDate() + dayOfWeek);
+                    const originalText = cell.textContent.split('(')[0].trim();
+                    cell.textContent = `${originalText} (${formatDate(date).slice(0, 5)})`;
                 }
+            });
+        
+            // Filtruj wiersze z lekcjami
+            for (let i = 1; i < rows.length; i++) {
+                const row = rows[i];
+                const cells = row.querySelectorAll('td');
+                let hasLessonsInWeek = false;
+        
+                cells.forEach((cell, cellIndex) => {
+                    if (cellIndex === 0) return; // Pomijamy kolumnę z godzinami
+        
+                    if (cellIndex > daysConfig.numberOfDays) {
+                        cell.style.display = 'none';
+                        return;
+                    }
+        
+                    const cellContent = cell.innerHTML;
+                    if (cellContent && cellContent.trim() !== '') {
+                        const dayOfWeek = daysConfig.startDay + (cellIndex - 1);
+                        const currentDate = new Date(weekRange.start);
+                        currentDate.setDate(weekRange.start.getDate() + dayOfWeek);
+                        const dateStr = formatDate(currentDate).slice(0, 5);
+                        
+                        if (!cellContent.includes(dateStr)) {
+                            cell.innerHTML = '';
+                        } else {
+                            hasLessonsInWeek = true;
+                        }
+                    }
+                });
+        
+                row.style.display = hasLessonsInWeek ? '' : 'none';
             }
-        });
-
-        row.style.display = hasLessonsInWeek ? '' : 'none';
-    }
-}
+        }
 
         function setCookie(name, value, days) {
             const date = new Date();
@@ -1344,8 +1345,6 @@ function updateWeekButtons() {
                     } else {
                         controlsContainer.classList.add('hidden');
                         // format cells content
-                        //get plandata
-                        //get category
                         actualplan = document.querySelector('#plan-content table');
                         
                         const rows = actualplan.querySelectorAll('tr');
@@ -1355,15 +1354,12 @@ function updateWeekButtons() {
                                 cell.classList.add('border', 'border-gray-200', 'p-2', 'text-sm');
                                 if (cell.tagName === 'TD') {
                                     const isTimeColumn = cellIndex === 0;
-                                    console.log("Formatowanie komórki:", cell.textContent, isTimeColumn);
                                     cell.innerHTML = formatCellContent(cell.textContent, isTimeColumn, category);
-                                        
-                                            
-                                        }
-                                    });
-                                });
-                            };
-
+                                }
+                            });
+                        });
+                    }
+        
                     comparisonsSection.style.display = showComparer ? '' : 'none';
                 });
             } else {
