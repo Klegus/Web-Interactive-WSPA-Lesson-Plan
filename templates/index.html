@@ -878,6 +878,10 @@ function updateWeekButtons() {
         }
 
         function highlightCurrentTimeSlot() {
+            const now = new Date();
+            const currentDay = now.getDay();
+            const currentTime = now.getHours() * 60 + now.getMinutes();
+
             const selectedPlan = planSelect.value;
             const selectedGroup = groupSelect.value;
             if (!selectedPlan || !selectedGroup) return;
