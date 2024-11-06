@@ -11,6 +11,8 @@ import re
 
 app = FastAPI()
 
+from markupsafe import Markup
+
 def format_cell_content(content: str, category: str) -> str:
     """Format cell content based on category."""
     if category != 'st':
@@ -19,23 +21,19 @@ def format_cell_content(content: str, category: str) -> str:
             return content
             
         formatted_lines = []
-        for line in lines:
-            match = re.match(r'^(.*?)(?:\s+-\s+(?!zj\.))(.*)', line)
-            if match:
-                subject, details = match.groups()
+        # First line is always the subject name
+        if lines:
+            formatted_lines.append(
+                f'<div class="mb-2">'
+                f'<span class="text-red-600 font-bold">{lines[0]}</span>'
+                f'</div>'
+            )
+            # Rest of the lines are regular text
+            for line in lines[1:]:
                 formatted_lines.append(
-                    f'<div class="mb-2">'
-                    f'<span class="subject block text-red-600 font-bold">{subject.strip()}</span>'
-                    f'<span class="details block text-gray-600 text-sm mt-1">{details.strip()}</span>'
-                    f'</div>'
+                    f'<div class="mb-1">{line}</div>'
                 )
-            else:
-                formatted_lines.append(
-                    f'<div class="mb-2">'
-                    f'<span class="subject block text-red-600 font-bold">{line}</span>'
-                    f'</div>'
-                )
-        return ''.join(formatted_lines)
+        return Markup(''.join(formatted_lines))
     return content
 
 # Konfiguracja środowiska
