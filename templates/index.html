@@ -1165,11 +1165,7 @@ function updateWeekButtons() {
                                 cell.classList.add('border', 'border-gray-200', 'p-2', 'text-sm');
                                 if (cell.tagName === 'TD') {
                                     const isTimeColumn = cellIndex === 0;
-                                    if (category === 'st') {
-                                        cell.innerHTML = formatCellContent(cell.textContent, isTimeColumn);
-                                    } else {
-                                        cell.innerHTML = formatCellContent(cell.textContent, isTimeColumn);
-                                                }
+                                    cell.innerHTML = formatCellContent(cell.textContent, isTimeColumn, category);
                                         
                                             
                                         }
