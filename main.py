@@ -16,6 +16,8 @@ if not os.environ.get("MONGO_URI"):
     MONGO_URI = os.getenv("MONGO_URI")
     DEV = os.getenv("DEV")
     BACKEND_URL = os.getenv("BACKEND_URL")
+    COMPARER = os.environ.get("COMPARER", "false").lower() == "true"
+
 else:
     MONGO_URI = os.environ.get("MONGO_URI")
     DEV = os.environ.get("DEV")
@@ -52,8 +54,7 @@ def get_semester_collections() -> Dict[str, Dict]:
                 collections_data[collection_name] = {
                     "plan_name": latest_plan["plan_name"],
                     "groups": latest_plan["groups"],
-                    "timestamp": latest_plan["timestamp"],
-                    "category": latest_plan.get("category", "st")  # domyślnie "st" jeśli nie określono
+                    "timestamp": latest_plan["timestamp"]
                 }
     return collections_data
 
@@ -155,6 +156,6 @@ async def get_status():
 if DEV == 'True':
     if __name__ == "__main__":
         import uvicorn
-        uvicorn.run(app, host="0.0.0.0", port=8088)
+        uvicorn.run(app, host="127.0.0.1", port=8088)
 else:
     handler = Mangum(app)

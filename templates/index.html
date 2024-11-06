@@ -725,27 +725,34 @@ function updateWeekButtons() {
             comparisonsContainer.innerHTML = '';
             
             if (category) {
+                // First clear any existing options except the default one
                 Array.from(planSelect.options).forEach(option => {
                     if (option.value) {
                         option.remove();
                     }
                 });
-
-                {% for collection_name, data in semesters.items() %}
-                const semesterOption = {
-                    collection: "{{ collection_name }}",
-                    name: "{{ data.plan_name }}",
-                    groups: {{ data.groups|tojson }},
-                    category: "{{ data.get('category', 'st') }}"
+        
+                const semesters = {
+                    {% for collection_name, data in semesters.items() %}
+                    "{{ collection_name }}": {
+                        collection: "{{ collection_name }}",
+                        name: "{{ data.plan_name }}",
+                        groups: {{ data.groups|tojson }},
+                        category: "{{ data.get('category', 'st') }}"
+                    },
+                    {% endfor %}
                 };
-                if (semesterOption.category === category) {
-                    const option = document.createElement('option');
-                    option.value = semesterOption.collection;
-                    option.textContent = semesterOption.name;
-                    option.dataset.groups = JSON.stringify(semesterOption.groups);
-                    planSelect.appendChild(option);
-                }
-                {% endfor %}
+        
+                // Add options for the selected category
+                Object.values(semesters).forEach(semester => {
+                    if (semester.category === category) {
+                        const option = document.createElement('option');
+                        option.value = semester.collection;
+                        option.textContent = semester.name;
+                        option.dataset.groups = JSON.stringify(semester.groups);
+                        planSelect.appendChild(option);
+                    }
+                });
             }
         }
 
