@@ -732,17 +732,17 @@ function updateWeekButtons() {
                 });
 
                 {% for collection_name, data in semesters.items() %}
-                const currentPlan = {
+                const planOption = {
                     collection: "{{ collection_name }}",
                     name: "{{ data.plan_name }}",
                     groups: {{ data.groups|tojson }},
                     category: "{{ data.get('category', 'st') }}"
                 };
-                if (currentPlan.category === category) {
+                if (planOption.category === category) {
                     const option = document.createElement('option');
-                    option.value = currentPlan.collection;
-                    option.textContent = currentPlan.name;
-                    option.dataset.groups = JSON.stringify(currentPlan.groups);
+                    option.value = planOption.collection;
+                    option.textContent = planOption.name;
+                    option.dataset.groups = JSON.stringify(planOption.groups);
                     planSelect.appendChild(option);
                 }
                 {% endfor %}
