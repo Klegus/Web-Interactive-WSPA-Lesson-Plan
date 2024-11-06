@@ -1137,17 +1137,19 @@ function updateWeekButtons() {
                                                 const lines = content.split('\n').map(line => line.trim()).filter(line => line);
                                                 if (lines.length > 0) {
                                                     const formattedContent = lines.map(line => {
-                                                        if (line.includes('-')) {
-                                                            const [subject, ...details] = line.split('-');
-                                                            return `<div class="mb-1">
+                                                        // Znajdź pierwszy myślnik który nie jest częścią "zj." lub innych specjalnych oznaczeń
+                                                        const match = line.match(/^(.*?)(?:\s+-\s+(?!zj\.))(.*)/);
+                                                        if (match) {
+                                                            const [_, subject, details] = match;
+                                                            return `<div class="mb-2">
                                                                 <span class="subject block text-red-600 font-bold">${subject.trim()}</span>
-                                                                <span class="details block text-gray-600 text-xs">${details.join('-').trim()}</span>
+                                                                <span class="details block text-gray-600 text-sm mt-1">${details.trim()}</span>
                                                             </div>`;
                                                         }
-                                                        return `<div class="mb-1"><span class="subject block text-red-600 font-bold">${line}</span></div>`;
+                                                        return `<div class="mb-2"><span class="subject block text-red-600 font-bold">${line}</span></div>`;
                                                     }).join('');
                                                     cell.innerHTML = formattedContent;
-                                                    cell.classList.add('align-top');
+                                                    cell.classList.add('align-top', 'p-3');
                                                 }
                                             }
                                         }
