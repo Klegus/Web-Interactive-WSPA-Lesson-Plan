@@ -878,13 +878,6 @@ function updateWeekButtons() {
         }
 
         function highlightCurrentTimeSlot() {
-            console.log("Rozpoczęcie funkcji highlightCurrentTimeSlot");
-            const now = new Date();
-            const currentDay = now.getDay();
-            const currentTime = now.getHours() * 60 + now.getMinutes();
-            console.log(`Aktualny czas: ${now.getHours()}:${now.getMinutes()}, dzień tygodnia: ${currentDay}`);
-
-            // Pobierz kategorię planu
             const selectedPlan = planSelect.value;
             const selectedGroup = groupSelect.value;
             if (!selectedPlan || !selectedGroup) return;
@@ -892,10 +885,16 @@ function updateWeekButtons() {
             axios.get(`/api/plan/${selectedPlan}/${selectedGroup}`).then(response => {
                 const category = response.data.category || 'st';
                 
-                // Dla planów niestacjonarnych nie sprawdzamy dnia tygodnia
+                // Only highlight current time slot for 'st' category
                 if (category !== 'st') {
+                    const infoElement = document.getElementById('current-lesson-info');
+                    infoElement.innerHTML = "Podświetlanie aktualnej lekcji dostępne tylko dla studiów stacjonarnych";
                     return;
                 }
+
+                const now = new Date();
+                const currentDay = now.getDay();
+                const currentTime = now.getHours() * 60 + now.getMinutes();
 
                 // Dla planów stacjonarnych sprawdzamy weekend
                 if (currentDay === 0 || currentDay === 6) {
@@ -1039,11 +1038,8 @@ function updateWeekButtons() {
         async function loadPlanAndComparisons(selectedPlan, selectedGroup) {
             if (selectedPlan && selectedGroup) {
                 try {
-                    console.log("Pobieranie planu dla:", selectedPlan, selectedGroup);
                     const planResponse = await axios.get(`/api/plan/${selectedPlan}/${selectedGroup}`);
-                    console.log("Otrzymano odpowiedź:", planResponse.data);
-                    console.log("Plan HTML:", planResponse.data.plan_html);
-                    console.log("Typ plan_html:", typeof planResponse.data.plan_html);
+                    const category = planResponse.data.category || 'st';
                     
                     if (!planResponse.data.plan_html) {
                         throw new Error("Otrzymano pusty plan HTML");
@@ -1096,7 +1092,8 @@ function updateWeekButtons() {
                         }
                         console.log("Znaleziono tabelę w planie");
                     
-                        if (filterToggle.checked && table) {
+                        // Only apply filtering for 'st' category
+                        if (filterToggle.checked && table && planResponse.data.category === 'st') {
                             filterPlanForCurrentWeek(table, weekRange, planResponse.data);
                         }
                     } catch (renderError) {
