@@ -1127,37 +1127,15 @@ function updateWeekButtons() {
                                     if (category === 'st') {
                                         cell.innerHTML = formatCellContent(cell.textContent, isTimeColumn);
                                     } else {
-                                        // Formatowanie dla planów nst i nst-puw
-                                        const content = cell.textContent.trim();
-                                        if (content) {
-                                            if (isTimeColumn) {
-                                                cell.innerHTML = formatTimeColumn(content);
-                                            } else {
-                                                // Rozdziel treść na przedmiot i szczegóły
-                                                const lines = content.split('\n').map(line => line.trim()).filter(line => line);
-                                                if (lines.length > 0) {
-                                                    const formattedContent = lines.map(line => {
-                                                        // Znajdź pierwszy myślnik który nie jest częścią "zj." lub innych specjalnych oznaczeń
-                                                        const match = line.match(/^(.*?)(?:\s+-\s+(?!zj\.))(.*)/);
-                                                        if (match) {
-                                                            const [_, subject, details] = match;
-                                                            return `<div class="mb-2">
-                                                                <span class="subject block text-red-600 font-bold">${subject.trim()}</span>
-                                                                <span class="details block text-gray-600 text-sm mt-1">${details.trim()}</span>
-                                                            </div>`;
-                                                        }
-                                                        return `<div class="mb-2"><span class="subject block text-red-600 font-bold">${line}</span></div>`;
-                                                    }).join('');
-                                                    cell.innerHTML = formattedContent;
-                                                    cell.classList.add('align-top', 'p-3');
+                                        cell.innerHTML = formatCellContent(cell.textContent, isTimeColumn);
                                                 }
-                                            }
+                                        
+                                            
                                         }
-                                    }
-                                }
-                            });
-                        });
-                    }
+                                    });
+                                });
+                            };
+
                     
                     planContainer.classList.remove('hidden');
 
