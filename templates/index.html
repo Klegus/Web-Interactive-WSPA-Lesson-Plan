@@ -823,12 +823,26 @@ function updateWeekButtons() {
             const currentTime = now.getHours() * 60 + now.getMinutes();
             console.log(`Aktualny czas: ${now.getHours()}:${now.getMinutes()}, dzień tygodnia: ${currentDay}`);
 
-            // Jeśli jest weekend, tylko wyświetl informację
-            if (currentDay === 0 || currentDay === 6) {
-                const infoElement = document.getElementById('current-lesson-info');
-                infoElement.innerHTML = "Weekend! Czas wolny od zajęć 🎉";
-                return; // Zakończ funkcję, nie próbuj podświetlać
-            }
+            // Pobierz kategorię planu
+            const selectedPlan = planSelect.value;
+            const selectedGroup = groupSelect.value;
+            if (!selectedPlan || !selectedGroup) return;
+
+            axios.get(`/api/plan/${selectedPlan}/${selectedGroup}`).then(response => {
+                const category = response.data.category || 'st';
+                
+                // Dla planów niestacjonarnych nie sprawdzamy dnia tygodnia
+                if (category !== 'st') {
+                    return;
+                }
+
+                // Dla planów stacjonarnych sprawdzamy weekend
+                if (currentDay === 0 || currentDay === 6) {
+                    const infoElement = document.getElementById('current-lesson-info');
+                    infoElement.innerHTML = "Weekend! Czas wolny od zajęć 🎉";
+                    return;
+                }
+            });
 
             const table = document.querySelector('#plan-content table');
             if (!table) {
@@ -1235,8 +1249,16 @@ function updateWeekButtons() {
             const comparisonsSection = document.getElementById('comparisons-section');
             
             if (selectedPlan && selectedGroup) {
-                controlsContainer.classList.remove('hidden');
-                comparisonsSection.style.display = showComparer ? '' : 'none';
+                // Sprawdź kategorię planu
+                axios.get(`/api/plan/${selectedPlan}/${selectedGroup}`).then(response => {
+                    const category = response.data.category || 'st';
+                    if (category === 'st') {
+                        controlsContainer.classList.remove('hidden');
+                    } else {
+                        controlsContainer.classList.add('hidden');
+                    }
+                    comparisonsSection.style.display = showComparer ? '' : 'none';
+                });
             } else {
                 controlsContainer.classList.add('hidden');
                 comparisonsSection.classList.add('hidden');
