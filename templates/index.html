@@ -698,6 +698,14 @@ function updateWeekButtons() {
             return result.trim() + ' temu';
         }
 
+        function saveSelectedCategory(category) {
+            localStorage.setItem('selectedCategory', category);
+        }
+
+        function loadSelectedCategory() {
+            return localStorage.getItem('selectedCategory');
+        }
+
         function saveSelectedPlan(plan) {
             localStorage.setItem('selectedPlan', plan);
         }
@@ -777,6 +785,7 @@ function updateWeekButtons() {
 
         categorySelect.addEventListener('change', (event) => {
             const selectedCategory = event.target.value;
+            saveSelectedCategory(selectedCategory);
             updatePlanSelect(selectedCategory);
             planSelect.value = '';
             groupSelect.value = '';
@@ -1332,14 +1341,21 @@ function updateWeekButtons() {
             if (filterToggleState !== null) {
                 filterToggle.checked = (filterToggleState === 'true');
             }
-            if (lastSelectedPlan) {
-                planSelect.value = lastSelectedPlan;
-                const selectedOption = planSelect.selectedOptions[0];
-                updateGroupSelect(selectedOption);
+
+            const lastSelectedCategory = loadSelectedCategory();
+            if (lastSelectedCategory) {
+                categorySelect.value = lastSelectedCategory;
+                updatePlanSelect(lastSelectedCategory);
                 
-                if (lastSelectedGroup) {
-                    groupSelect.value = lastSelectedGroup;
-                    await loadPlanAndComparisons(lastSelectedPlan, lastSelectedGroup);
+                if (lastSelectedPlan) {
+                    planSelect.value = lastSelectedPlan;
+                    const selectedOption = planSelect.selectedOptions[0];
+                    updateGroupSelect(selectedOption);
+                    
+                    if (lastSelectedGroup) {
+                        groupSelect.value = lastSelectedGroup;
+                        await loadPlanAndComparisons(lastSelectedPlan, lastSelectedGroup);
+                    }
                 }
                 // Aktualizuj czas co minutę
                 setInterval(updateTimeSinceLastUpdate, 60000);
