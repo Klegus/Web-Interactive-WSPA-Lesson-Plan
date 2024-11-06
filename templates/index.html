@@ -463,7 +463,6 @@
                     <option value="">Wybierz tryb studiów</option>
                     <option value="st">Studia Stacjonarne</option>
                     <option value="nst">Studia Niestacjonarne</option>
-                    <option value="nst-puw">PUW</option>
                 </select>
             </div>
             <div class="select-wrapper">
@@ -1236,15 +1235,13 @@ function updateWeekButtons() {
             const category = planData.category || 'st';
             let daysConfig;
             switch (category) {
-                case 'nst':
-                case 'nst-online':  // Added this case to handle nst-online
+                case 'nst':  // Added this case to handle nst-online
                     daysConfig = {
                         startDay: 4, // Piątek
                         numberOfDays: 3, // Piątek, Sobota, Niedziela
                         dayNames: ["Godziny", "Piątek", "Sobota", "Niedziela"]
                     };
-                    break;
-                case 'nst-puw':
+                case 'nst-online':  
                     daysConfig = {
                         startDay: 5, // Sobota
                         numberOfDays: 2, // Sobota, Niedziela
