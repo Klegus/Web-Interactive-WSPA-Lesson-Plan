@@ -54,7 +54,8 @@ def get_semester_collections() -> Dict[str, Dict]:
                 collections_data[collection_name] = {
                     "plan_name": latest_plan["plan_name"],
                     "groups": latest_plan["groups"],
-                    "timestamp": latest_plan["timestamp"]
+                    "timestamp": latest_plan["timestamp"],
+                    "category": latest_plan.get("category", "st")  # Default to "st" if no category
                 }
     return collections_data
 
