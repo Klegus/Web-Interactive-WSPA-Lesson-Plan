@@ -1041,6 +1041,13 @@ function updateWeekButtons() {
                     const planResponse = await axios.get(`/api/plan/${selectedPlan}/${selectedGroup}`);
                     const category = planResponse.data.category || 'st';
                     
+                    // For non-standard plans, just display the plan without modifications
+                    if (category !== 'st') {
+                        planContentElement.innerHTML = planResponse.data.plan_html;
+                        planContainer.classList.remove('hidden');
+                        return;
+                    }
+                    
                     if (!planResponse.data.plan_html) {
                         throw new Error("Otrzymano pusty plan HTML");
                     }
@@ -1081,19 +1088,13 @@ function updateWeekButtons() {
                     
                     let table;
                     try {
-                        console.log("Próba wstawienia HTML do elementu");
                         planContentElement.innerHTML = planResponse.data.plan_html;
-                        console.log("HTML wstawiony pomyślnie");
-                        
                         table = planContentElement.querySelector('table');
                         if (!table) {
-                            console.error("Nie znaleziono tabeli po wstawieniu HTML");
                             throw new Error("Nie można znaleźć tabeli w planie");
                         }
-                        console.log("Znaleziono tabelę w planie");
-                    
-                        // Only apply filtering for 'st' category
-                        if (filterToggle.checked && table && planResponse.data.category === 'st') {
+                        
+                        if (filterToggle.checked && category === 'st') {
                             filterPlanForCurrentWeek(table, weekRange, planResponse.data);
                         }
                     } catch (renderError) {
