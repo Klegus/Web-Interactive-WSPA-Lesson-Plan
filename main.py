@@ -96,12 +96,13 @@ async def get_plan(collection_name: str, group_name: str):
         plan_html = latest_plan["groups"][group_name].replace('\n', ' ')
         #print(f"Długość pobranego HTML: {len(plan_html)}")
         #print(f"Fragment HTML: {plan_html[:200]}...")  # Pokaż początek planu
-        
+    
         response = {
             "plan_name": latest_plan["plan_name"],
             "group_name": group_name,
             "plan_html": plan_html,
-            "timestamp": latest_plan["timestamp"]
+            "timestamp": latest_plan["timestamp"],
+            "category": latest_plan.get("category", "st")  # domyślnie "st" jeśli nie określono
         }
         print("Wysyłanie odpowiedzi:", response)
         return response
