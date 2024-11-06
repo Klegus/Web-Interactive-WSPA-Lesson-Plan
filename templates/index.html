@@ -1022,7 +1022,7 @@ function updateWeekButtons() {
                         console.log("Znaleziono tabelę w planie");
                     
                         if (filterToggle.checked && table) {
-                            filterPlanForCurrentWeek(table, weekRange);
+                            filterPlanForCurrentWeek(table, weekRange, planResponse.data);
                         }
                     } catch (renderError) {
                         console.error("Błąd podczas renderowania tabeli:", renderError);
