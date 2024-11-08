@@ -112,18 +112,64 @@ input:checked + .slider:before {
 @media (max-width: 640px) {
   #plan-content {
     overflow-x: auto;
-    scroll-snap-type: x mandatory;
+    -webkit-overflow-scrolling: touch;
+    max-width: 100%;
+    position: relative;
   }
+
+  #plan-content::after {
+    content: "Użyj gestów przybliżania aby powiększyć plan";
+    position: absolute;
+    bottom: -25px;
+    left: 0;
+    width: 100%;
+    text-align: center;
+    font-size: 0.7rem;
+    color: #666;
+  }
+
   #plan-content table {
-    min-width: 480px;
-    font-size: 0.85rem;
+    min-width: 100%;
+    border-collapse: collapse;
+    font-size: 0.65rem;
   }
+
   #plan-content td {
-    padding: 0.5rem 0.25rem;
-    height: 50px;
+    padding: 2px;
+    height: auto;
+    min-height: 35px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
-  #plan-content td {
-    scroll-snap-align: center;
+
+  #plan-content td span.subject {
+    font-size: 0.7rem;
+    display: block;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  /* Disable animations on mobile */
+  #plan-content td:hover {
+    background-color: transparent;
+  }
+
+  .current-time-highlight {
+    animation: none;
+    background-color: rgba(227, 30, 36, 0.1);
+  }
+}
+
+/* Extra small devices */
+@media (max-width: 360px) {
+  #plan-content table {
+    font-size: 0.6rem;
+  }
+  
+  #plan-content td span.subject {
+    font-size: 0.65rem;
   }
 }
 #countdown {
