@@ -96,10 +96,44 @@ input:checked + .slider:before {
   text-align: center;
   vertical-align: middle;
   height: 60px;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  width: 120px;
+  padding: 8px;
+  position: relative;
   border: 1px solid #e5e7eb;
   transition: all 0.2s ease;
+}
+
+#plan-content td .cell-content {
+  max-height: 50px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+}
+
+#plan-content td .expand-btn {
+  position: absolute;
+  bottom: 2px;
+  right: 2px;
+  background: rgba(255, 255, 255, 0.9);
+  border: 1px solid #e5e7eb !important;
+  color: var(--wspia-gray) !important;
+  padding: 2px 4px;
+  font-size: 0.7rem;
+  border-radius: 3px;
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+
+#plan-content td:hover .expand-btn {
+  opacity: 1;
+}
+
+#plan-content td.expanded .cell-content {
+  max-height: none;
+  -webkit-line-clamp: unset;
 }
 #plan-content td:hover {
   background-color: rgba(227, 30, 36, 0.05);
