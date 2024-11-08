@@ -126,90 +126,90 @@
     </div>
     <script>
     function formatTimeColumn(content) {
-        const times = content.split('-');
-        return times.map(time => {
-          const [hours, minutes] = time.trim().split(/(\d{2})$/);
-          return `${hours}<sup>${minutes}</sup>`;
-        }).join(' - ');
-      }
-      function saveSelectedCategory(category) {
-        localStorage.setItem('selectedCategory', category);
-      }
+            const times = content.split('-');
+            return times.map(time => {
+                const [hours, minutes] = time.trim().split(/(\d{2})$/);
+                return `${hours}<sup>${minutes}</sup>`;
+            }).join(' - ');
+        }
+        function saveSelectedCategory(category) {
+          localStorage.setItem('selectedCategory', category);
+    }
 
       function loadSelectedCategory() {
-        return localStorage.getItem('selectedCategory');
+          return localStorage.getItem('selectedCategory');
       }
 
       function saveSelectedPlan(plan) {
-        localStorage.setItem('selectedPlan', plan);
+          localStorage.setItem('selectedPlan', plan);
       }
 
       function loadSelectedPlan() {
-        return localStorage.getItem('selectedPlan');
+          return localStorage.getItem('selectedPlan');
       }
 
       function saveSelectedGroup(group) {
-        localStorage.setItem('selectedGroup', group);
+          localStorage.setItem('selectedGroup', group);
       }
 
       function loadSelectedGroup() {
-        return localStorage.getItem('selectedGroup');
+          return localStorage.getItem('selectedGroup');
       }
-      const showComparer = {{ show_comparer| tojson |default ('false') }};
-      const planSelect = document.getElementById('plan-select');
-      const groupSelect = document.getElementById('group-select');
-      const planContainer = document.getElementById('plan-container');
-      const groupNameElement = document.getElementById('group-name');
-      const weekRangeElement = document.getElementById('week-range');
-      const planDateElement = document.getElementById('plan-date');
-      const planContentElement = document.getElementById('plan-content');
-      const comparisonsContainer = document.getElementById('comparisons-container');
-      const filterToggle = document.getElementById('filter-toggle');
-      let countdownInterval;
-      let lastSelectedPlan = loadSelectedPlan();
-      let lastSelectedGroup = loadSelectedGroup();
+        const showComparer = {{ show_comparer|tojson|default('false') }};
+        const planSelect = document.getElementById('plan-select');
+        const groupSelect = document.getElementById('group-select');
+        const planContainer = document.getElementById('plan-container');
+        const groupNameElement = document.getElementById('group-name');
+        const weekRangeElement = document.getElementById('week-range');
+        const planDateElement = document.getElementById('plan-date');
+        const planContentElement = document.getElementById('plan-content');
+        const comparisonsContainer = document.getElementById('comparisons-container');
+        const filterToggle = document.getElementById('filter-toggle');
+        let countdownInterval;
+        let lastSelectedPlan = loadSelectedPlan();
+        let lastSelectedGroup = loadSelectedGroup();
 
 
-      function updatePlanSelect(selectedCategory) {
-        planSelect.disabled = !selectedCategory;
-        planSelect.innerHTML = '<option value="">Wybierz plan</option>';
-        groupSelect.disabled = true;
-        groupSelect.innerHTML = '<option value="">Najpierw wybierz plan</option>';
-        planContainer.classList.add('hidden');
-        comparisonsContainer.innerHTML = '';
+        function updatePlanSelect(selectedCategory) {
+            planSelect.disabled = !selectedCategory;
+            planSelect.innerHTML = '<option value="">Wybierz plan</option>';
+            groupSelect.disabled = true;
+            groupSelect.innerHTML = '<option value="">Najpierw wybierz plan</option>';
+            planContainer.classList.add('hidden');
+            comparisonsContainer.innerHTML = '';
 
-        if (selectedCategory) {
-          // First clear any existing options except the default one
-          Array.from(planSelect.options).forEach(option => {
-            if (option.value) {
-              option.remove();
-            }
-          });
+            if (selectedCategory) {
+                // First clear any existing options except the default one
+                Array.from(planSelect.options).forEach(option => {
+                    if (option.value) {
+                        option.remove();
+                    }
+                });
 
-          const semesters = {
+                const semesters = {
                     {% for collection_name, data in semesters.items() %}
-          "{{ collection_name }}": {
-            collection: "{{ collection_name }}",
-              name: "{{ data.plan_name }}",
-                groups: { { data.groups | tojson } },
-            category: "{{ data.category }}"
-          },
-          {% endfor %}
-        };
+                    "{{ collection_name }}": {
+                        collection: "{{ collection_name }}",
+                        name: "{{ data.plan_name }}",
+                        groups: {{ data.groups|tojson }},
+                        category: "{{ data.category }}"
+                    },
+                    {% endfor %}
+                };
 
-        // Add options for the selected category
-        Object.values(semesters)
-          .filter(semester => semester.category === selectedCategory)
-          .sort((a, b) => a.name.localeCompare(b.name))
-          .forEach(semester => {
-            const option = document.createElement('option');
-            option.value = semester.collection;
-            option.textContent = semester.name;
-            option.dataset.groups = JSON.stringify(semester.groups);
-            option.dataset.category = semester.category;
-            planSelect.appendChild(option);
-          });
-      }
+                // Add options for the selected category
+                Object.values(semesters)
+                    .filter(semester => semester.category === selectedCategory)
+                    .sort((a, b) => a.name.localeCompare(b.name))
+                    .forEach(semester => {
+                        const option = document.createElement('option');
+                        option.value = semester.collection;
+                        option.textContent = semester.name;
+                        option.dataset.groups = JSON.stringify(semester.groups);
+                        option.dataset.category = semester.category;
+                        planSelect.appendChild(option);
+                    });
+            }
         }
     </script>
     <script src="static/js/plan.js"></script>
