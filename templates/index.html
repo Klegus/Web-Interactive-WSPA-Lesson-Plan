@@ -1,523 +1,186 @@
 <!DOCTYPE html>
 <html lang="pl">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Plan Lekcji</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
-    <style>
-        :root {
-            --wspaa-red: #E31E24;
-            --wspia-gray: #58595B;
-            --wspia-light-gray: #e5e7eb;
-        }
-        
-        body {
-            background: linear-gradient(120deg, #f0f4f8 0%, #d9e2ec 100%);
-            min-height: 100vh;
-        }
-        .switch {
-            position: relative;
-            display: inline-block;
-            width: 60px;
-            height: 34px;
-        }
-        .switch input {
-            opacity: 0;
-            width: 0;
-            height: 0;
-        }
-        .slider {
-            position: absolute;
-            cursor: pointer;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background-color: white;
-            transition: .4s;
-            border-radius: 34px;
-        }
-        .slider:before {
-            position: absolute;
-            content: "";
-            height: 26px;
-            width: 26px;
-            left: 4px;
-            bottom: 4px;
-            background-color: white;
-            transition: .4s;
-            border-radius: 50%;
-        }
-        input:checked + .slider {
-            background-color: var(--wspia-red);
-        }
-        input:checked + .slider:before {
-            transform: translateX(26px);
-        }
-        .comparison-card {
-            transition: all 0.3s ease;
-            border-left: 4px solid var(--wspia-red);
-        }
-        .comparison-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
-        }
-        .custom-select {
-            background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
-            background-position: right 0.5rem center;
-            background-repeat: no-repeat;
-            background-size: 1.5em 1.5em;
-            padding-right: 2.5rem;
-            -webkit-print-color-adjust: exact;
-            print-color-adjust: exact;
-        }
-        .current-time-highlight {
-            animation: pulse 2s infinite;
-        }
-        @keyframes pulse {
-            0% {
-                background-color: rgba(227, 30, 36, 0.1);
-            }
-            50% {
-                background-color: rgba(227, 30, 36, 0.3);
-            }
-            100% {
-                background-color: rgba(227, 30, 36, 0.1);
-            }
-        }
-        #plan-content {
-            position: relative;
-        }
-        #plan-content table {
-            table-layout: fixed;
-            width: 100%;
-        }
-        #plan-content thead {
-            position: sticky;
-            top: 0;
-            z-index: 10;
-            background: white;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        }
-        #plan-content td {
-            text-align: center;
-            vertical-align: middle;
-            height: 60px;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            border: 1px solid #e5e7eb;
-            transition: all 0.2s ease;
-        }
-        #plan-content td:hover {
-            background-color: rgba(227, 30, 36, 0.05);
-        }
-        #plan-content td span.subject {
-            font-weight: bold;
-            display: block;
-            color: var(--wspia-red);
-        }
-        @media (max-width: 640px) {
-            #plan-content {
-                overflow-x: auto;
-                scroll-snap-type: x mandatory;
-            }
-            #plan-content table {
-                min-width: 480px;
-                font-size: 0.85rem;
-            }
-            #plan-content td {
-                padding: 0.5rem 0.25rem;
-                height: 50px;
-            }
-            #plan-content td {
-                scroll-snap-align: center;
-            }
-        }
-        #countdown {
-            font-size: 1.2em;
-            font-weight: bold;
-            color: var(--wspia-gray);
-        }
-        .server-status-container {
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            display: flex;
-            align-items: center;
-            padding: 10px;
-            background-color: rgba(255, 255, 255, 0.8);
-            border-radius: 20px;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-            z-index: 1000;
-        }
-        .server-status-indicator {
-            width: 15px;
-            height: 15px;
-            border-radius: 50%;
-            background-color: #10B981;
-            position: relative;
-            overflow: hidden;
-        }
-        .server-status-indicator::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background-color: rgba(255, 255, 255, 0.5);
-            border-radius: 50%;
-        }
-        .server-status-indicator.active::before {
-            animation: pulse-inner 2s infinite;
-        }
-        .server-status-indicator.inactive {
-            background-color: #EF4444;
-        }
-        .server-status-text {
-            margin-left: 10px;
-            font-weight: bold;
-        }
-        .server-status-tooltip {
-            visibility: hidden;
-            position: absolute;
-            top: 100%;
-            left: 50%;
-            transform: translateX(-50%);
-            background-color: #333;
-            color: #fff;
-            text-align: center;
-            padding: 5px 10px;
-            border-radius: 6px;
-            white-space: nowrap;
-            opacity: 0;
-            transition: opacity 0.3s, visibility 0.3s;
-            margin-top: 10px;
-        }
-        .server-status-tooltip::before {
-            content: '';
-            position: absolute;
-            bottom: 100%;
-            left: 50%;
-            border-width: 5px;
-            border-style: solid;
-            border-color: transparent transparent #333 transparent;
-            transform: translateX(-50%);
-        }
-        .server-status-container:hover .server-status-tooltip {
-            visibility: visible;
-            opacity: 1;
-        }
-        @keyframes pulse-inner {
-            0% {
-                box-shadow: inset 0 0 0 0 rgba(255, 255, 255, 0.7);
-            }
-            50% {
-                box-shadow: inset 0 0 0 10px rgba(255, 255, 255, 0);
-            }
-            100% {
-                box-shadow: inset 0 0 0 0 rgba(255, 255, 255, 0.7);
-            }
-        }
-
-        /* WSPiA-specific enhancements */
-        button {
-            transition: all 0.3s ease;
-            color: var(--wspia-red);
-            background-color: white !important;
-            border: 2px solid var(--wspia-red) !important;
-        }
-        
-        button:hover:not(:disabled) {
-            color: white;
-            background-color: var(--wspia-red) !important;
-            transform: translateY(-1px);
-        }
-
-        button:disabled {
-            color: var(--wspia-gray);
-            background-color: white !important;
-            border-color: var(--wspia-gray) !important;
-        }
-
-        select:focus {
-            border-color: var(--wspia-red) !important;
-            box-shadow: 0 0 0 2px rgba(227, 30, 36, 0.2) !important;
-        }
-
-        #current-lesson-info {
-            border-left: 4px solid var(--wspia-red);
-            transition: all 0.3s ease;
-        }
-
-        #current-lesson-info:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 16px rgba(0,0,0,0.1);
-        }
-        .selection-container {
-            max-width: 500px;
-            margin: 0 auto;
-            padding: 2rem;
-            background: white;
-            border-radius: 1rem;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-            transition: all 0.5s ease;
-        }
-
-        .selection-container.expanded {
-            max-width: 1200px;
-        }
-
-        .logo-container {
-            width: 120px;
-            height: 120px;
-            margin: 0 auto 2rem;
-            padding: 1rem;
-            background: white;
-            border-radius: 50%;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: all 0.3s ease;
-        }
-
-        .logo-container img {
-            width: 100%;
-            height: auto;
-            transition: all 0.3s ease;
-        }
-
-        .selection-container.expanded .logo-container {
-            width: 80px;
-            height: 80px;
-            margin-bottom: 1rem;
-        }
-
-        .select-wrapper {
-            position: relative;
-            margin-bottom: 1.5rem;
-            transition: all 0.3s ease;
-        }
-
-        .select-wrapper label {
-            display: block;
-            margin-bottom: 0.5rem;
-            color: var(--wspia-gray);
-            font-weight: 500;
-            transition: all 0.3s ease;
-        }
-
-        .select-wrapper select {
-            width: 100%;
-            padding: 0.75rem 1rem;
-            border: 2px solid #e5e7eb;
-            border-radius: 0.5rem;
-            appearance: none;
-            background-color: white;
-            transition: all 0.3s ease;
-        }
-
-        .select-wrapper select:focus {
-            outline: none;
-            border-color: var(--wspia-red);
-            box-shadow: 0 0 0 3px rgba(227, 30, 36, 0.1);
-        }
-
-        .select-wrapper::after {
-            content: '';
-            position: absolute;
-            right: 1rem;
-            top: 60%;
-            width: 0.8rem;
-            height: 0.8rem;
-            border-right: 2px solid var(--wspia-gray);
-            border-bottom: 2px solid var(--wspia-gray);
-            transform: translateY(-50%) rotate(45deg);
-            pointer-events: none;
-            transition: all 0.3s ease;
-        }
-
-        .selection-container h1 {
-            font-size: 2.5rem;
-            color: var(--wspia-gray);
-            text-align: center;
-            margin-bottom: 2rem;
-            transition: all 0.3s ease;
-        }
-
-        .selection-container.expanded h1 {
-            font-size: 2rem;
-            margin-bottom: 1rem;
-        }
-
-        .controls-section {
-            opacity: 0;
-            height: 0;
-            overflow: hidden;
-            transition: all 0.3s ease;
-        }
-
-        .controls-section.visible {
-            opacity: 1;
-            height: auto;
-            margin-top: 1rem;
-        }
-        .switch {
-            position: relative;
-            display: inline-block;
-            width: 60px;
-            height: 34px;
-            margin: 0 8px;
-        }
-
-        .switch input {
-            opacity: 0;
-            width: 0;
-            height: 0;
-        }
-
-        .slider {
-            position: absolute;
-            cursor: pointer;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background-color: #d1d5db;
-            transition: .4s;
-            border-radius: 34px;
-        }
-
-        .slider:before {
-            position: absolute;
-            content: "";
-            height: 26px;
-            width: 26px;
-            left: 4px;
-            bottom: 4px;
-            background-color: white;
-            transition: .4s;
-            border-radius: 50%;
-        }
-
-        /* Red background when checked */
-        input:checked + .slider {
-            background-color: red;
-        }
-
-        input:checked + .slider:before {
-            transform: translateX(26px);
-        }
-
-        /* Week navigation buttons */
-        #prevWeekBtn,
-        #nextWeekBtn {
-            background-color: white !important;
-            border: 2px solid var(--wspia-red);
-            color: black;
-            font-weight: 500;
-            padding: 0.5rem 1rem;
-            border-radius: 0.5rem;
-            transition: all 0.3s ease;
-            margin: 0 0.5rem;
-            box-shadow: 0 0 5px var(--wspia-red);
-        }
-
-
-        #prevWeekBtn:disabled,
-        #nextWeekBtn:disabled {
-            background-color: white !important;
-            border-color: #e5e7eb;
-            color: #9ca3af;
-            box-shadow: none;
-        }
-
-        .button-content {
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
-    </style>
-</head>
-<body class="min-h-screen font-sans text-gray-800">
+    <link rel="stylesheet" href="static/css/style.css" />
+  </head>
+  <body class="min-h-screen font-sans text-gray-800">
     <div class="server-status-container">
-        <div class="server-status-indicator" id="serverStatusIndicator"></div>
-        <span class="server-status-text" id="serverStatusText">Łączenie...</span>
-        <div class="server-status-tooltip" id="serverStatusTooltip"></div>
+      <div class="server-status-indicator" id="serverStatusIndicator"></div>
+      <span class="server-status-text" id="serverStatusText">Łączenie...</span>
+      <div class="server-status-tooltip" id="serverStatusTooltip"></div>
     </div>
     <div class="container mx-auto px-4 py-12">
-        <div id="main-container" class="selection-container">
-            <div class="logo-container">
-                <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSAvu7fXk3m4Lz5iwLKJHAPKlelKnT8CjI-Bg&s" alt="WSPiA Logo" class="logo">
-            </div>
-            
-            <h1 class="text-4xl font-bold text-center mb-8">Plan Lekcji</h1>
-        <div id="current-lesson-info" class="mb-6 p-4 bg-white rounded-lg shadow-md text-center"></div>
+      <div id="main-container" class="selection-container">
+        <div class="logo-container">
+          <img
+            src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSAvu7fXk3m4Lz5iwLKJHAPKlelKnT8CjI-Bg&s"
+            alt="WSPiA Logo"
+            class="logo"
+          />
+        </div>
 
-            <div class="select-wrapper">
-                <label for="plan-select" class="text-lg font-medium text-gray-700">Wybierz plan:</label>
-                <select id="plan-select" class="custom-select">
-                    <option value="">Wybierz plan</option>
-                    {% for collection_name, data in semesters.items() %}
-                    <option value="{{ collection_name }}" data-groups='{{ data.groups|tojson }}'>{{ data.plan_name }}</option>
-                    {% endfor %}
-                </select>
-            </div>
-            <div class="select-wrapper">
-                <label for="group-select" class="text-lg font-medium text-gray-700">Wybierz grupę:</label>
-                <select id="group-select" class="custom-select" disabled>
-                    <option value="">Najpierw wybierz plan</option>
-                </select>
-            </div>
-        
+        <h1 class="text-4xl font-bold text-center mb-8">Plan Lekcji</h1>
+        <div
+          id="current-lesson-info"
+          class="mb-6 p-4 bg-white rounded-lg shadow-md text-center"
+        ></div>
+
+        <div class="select-wrapper">
+          <label for="category-select" class="text-lg font-medium text-gray-700"
+            >Wybierz tryb studiów:</label
+          >
+          <select id="category-select" class="custom-select">
+            <option value="">Wybierz tryb studiów</option>
+            <option value="st">Studia Stacjonarne</option>
+            <option value="nst">Studia Niestacjonarne</option>
+            <option value="nst-online">Studia Niestacjonarne - Online</option>
+          </select>
+        </div>
+        <div class="select-wrapper">
+          <label for="plan-select" class="text-lg font-medium text-gray-700"
+            >Wybierz plan:</label
+          >
+          <select id="plan-select" class="custom-select" disabled>
+            <option value="">Najpierw wybierz tryb studiów</option>
+          </select>
+        </div>
+        <div class="select-wrapper">
+          <label for="group-select" class="text-lg font-medium text-gray-700"
+            >Wybierz grupę:</label
+          >
+          <select id="group-select" class="custom-select" disabled>
+            <option value="">Najpierw wybierz plan</option>
+          </select>
+        </div>
 
         <!-- Controls container - initially hidden -->
         <div id="controls-container" class="hidden">
-            <div class="mb-4 flex flex-wrap items-center justify-center gap-4">
-                <div class="flex items-center">
-                    <label for="filter-toggle" class="mr-2 text-sm sm:text-base">Filtruj plan dla wybranego tygodnia:</label>
-                    <label class="switch">
-                        <input type="checkbox" id="filter-toggle" checked>
-                        <span class="slider"></span>
-                    </label>
-                </div>
-                <div class="flex items-center gap-2">
-                    <button id="prevWeekBtn" class="px-3 py-2 rounded disabled:opacity-50 disabled:cursor-not-allowed bg-white hover:bg-gray-100 border border-gray-300 text-sm sm:text-base" disabled>
-                        <div class="button-content">
-                            <span>←</span>
-                            <span class="hidden sm:inline">Poprzedni tydzień</span>
-                            <span class="sm:hidden">Poprzedni</span>
-                        </div>
-                    </button>
-                    <button id="nextWeekBtn" class="px-3 py-2 rounded disabled:opacity-50 disabled:cursor-not-allowed bg-white hover:bg-gray-100 border border-gray-300 text-sm sm:text-base">
-                        <div class="button-content">
-                            <span class="hidden sm:inline">Następny tydzień</span>
-                            <span class="sm:hidden">Następny</span>
-                            <span>→</span>
-                        </div>
-                    </button>
-                </div>
+          <div class="mb-4 flex flex-wrap items-center justify-center gap-4">
+            <div class="flex items-center">
+              <label for="filter-toggle" class="mr-2 text-sm sm:text-base"
+                >Filtruj plan dla wybranego tygodnia:</label
+              >
+              <label class="switch">
+                <input type="checkbox" id="filter-toggle" checked />
+                <span class="slider"></span>
+              </label>
             </div>
+            <div class="flex items-center gap-2">
+              <button
+                id="prevWeekBtn"
+                class="px-3 py-2 rounded disabled:opacity-50 disabled:cursor-not-allowed bg-white hover:bg-gray-100 border border-gray-300 text-sm sm:text-base"
+                disabled
+              >
+                <div class="button-content">
+                  <span>←</span>
+                  <span class="hidden sm:inline">Poprzedni tydzień</span>
+                  <span class="sm:hidden">Poprzedni</span>
+                </div>
+              </button>
+              <button
+                id="nextWeekBtn"
+                class="px-3 py-2 rounded disabled:opacity-50 disabled:cursor-not-allowed bg-white hover:bg-gray-100 border border-gray-300 text-sm sm:text-base"
+              >
+                <div class="button-content">
+                  <span class="hidden sm:inline">Następny tydzień</span>
+                  <span class="sm:hidden">Następny</span>
+                  <span>→</span>
+                </div>
+              </button>
+            </div>
+          </div>
         </div>
 
-        <div id="plan-container" class="bg-white p-8 rounded-lg shadow-lg mb-12 hidden w-full">
-            <h2 id="group-name" class="text-3xl font-bold mb-3 text-gray-800"></h2>
-            <p id="week-range" class="text-xl font-semibold mb-3 text-gray-700"></p>
-            <p id="plan-date" class="mb-6 text-gray-600"></p>
-            <div id="plan-content" class="overflow-x-auto"></div>
+        <div
+          id="plan-container"
+          class="bg-white p-8 rounded-lg shadow-lg mb-12 hidden w-full"
+        >
+          <h2
+            id="group-name"
+            class="text-3xl font-bold mb-3 text-gray-800"
+          ></h2>
+          <p
+            id="week-range"
+            class="text-xl font-semibold mb-3 text-gray-700"
+          ></p>
+          <p id="plan-date" class="mb-6 text-gray-600"></p>
+          <div id="plan-content" class="overflow-x-auto" style="-webkit-overflow-scrolling: touch;">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=3.0, user-scalable=yes">
+          </div>
         </div>
 
         <!-- Comparisons section - initially hidden -->
-        <div id="comparisons-section" class="hidden" style="display: none;">
-            <h2 class="text-4xl font-bold mb-8 text-center text-gray-700">Porównania planów dla wybranej grupy</h2>
-            <div id="comparisons-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8"></div>
+        <div id="comparisons-section" class="hidden" style="display: none">
+          <h2 class="text-4xl font-bold mb-8 text-center text-gray-700">
+            Porównania planów dla wybranej grupy
+          </h2>
+          <div
+            id="comparisons-container"
+            class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8"
+          ></div>
         </div>
-        </div>
+      </div>
     </div>
     <script>
+    function wrapCellContent(cell) {
+      const content = cell.innerHTML;
+      if (!cell.querySelector('.cell-content')) {
+        const wrapper = document.createElement('div');
+        wrapper.className = 'cell-content';
+        wrapper.innerHTML = content;
+        
+        if (wrapper.scrollHeight > 50) {
+          const expandBtn = document.createElement('button');
+          expandBtn.className = 'expand-btn';
+          expandBtn.textContent = '...';
+          expandBtn.onclick = (e) => {
+            e.stopPropagation();
+            cell.classList.toggle('expanded');
+            expandBtn.textContent = cell.classList.contains('expanded') ? '←' : '...';
+          };
+          cell.appendChild(expandBtn);
+        }
+        
+        cell.innerHTML = '';
+        cell.appendChild(wrapper);
+      }
+    }
+
+    function formatTimeColumn(content) {
+            const times = content.split('-');
+            return times.map(time => {
+                const [hours, minutes] = time.trim().split(/(\d{2})$/);
+                return `${hours}<sup>${minutes}</sup>`;
+            }).join(' - ');
+        }
+        function saveSelectedCategory(category) {
+          localStorage.setItem('selectedCategory', category);
+    }
+
+      function loadSelectedCategory() {
+          return localStorage.getItem('selectedCategory');
+      }
+
+      function saveSelectedPlan(plan) {
+          localStorage.setItem('selectedPlan', plan);
+      }
+
+      function loadSelectedPlan() {
+          return localStorage.getItem('selectedPlan');
+      }
+
+      function saveSelectedGroup(group) {
+          localStorage.setItem('selectedGroup', group);
+      }
+
+      function loadSelectedGroup() {
+          return localStorage.getItem('selectedGroup');
+      }
         const showComparer = {{ show_comparer|tojson|default('false') }};
         const planSelect = document.getElementById('plan-select');
         const groupSelect = document.getElementById('group-select');
@@ -531,758 +194,66 @@
         let countdownInterval;
         let lastSelectedPlan = loadSelectedPlan();
         let lastSelectedGroup = loadSelectedGroup();
-        function updateInterfaceState() {
-            const mainContainer = document.getElementById('main-container');
-            const selectedPlan = planSelect.value;
-            const selectedGroup = groupSelect.value;
-            const controlsContainer = document.getElementById('controls-container');
-            const comparisonsSection = document.getElementById('comparisons-section');
-            
-            if (selectedPlan && selectedGroup) {
-                mainContainer.classList.add('expanded');
-                if (controlsContainer) controlsContainer.classList.add('visible');
-                if (comparisonsSection) comparisonsSection.classList.remove('hidden');
-                document.querySelectorAll('.select-wrapper').forEach(wrapper => {
-                    wrapper.style.marginBottom = '1rem';
-                });
-            } else {
-                mainContainer.classList.remove('expanded');
-                if (controlsContainer) controlsContainer.classList.remove('visible');
-                if (comparisonsSection) comparisonsSection.classList.add('hidden');
-                document.querySelectorAll('.select-wrapper').forEach(wrapper => {
-                    wrapper.style.marginBottom = '1.5rem';
-                });
-            }
-        }
-        function getWeekRange(date) {
-            const startOfWeek = new Date(date);
-            startOfWeek.setDate(date.getDate() - date.getDay() + (date.getDay() === 0 ? -6 : 1));
-            const endOfWeek = new Date(startOfWeek);
-            endOfWeek.setDate(startOfWeek.getDate() + 6);
-            return {
-                start: startOfWeek,
-                end: endOfWeek
-            };
-        }
-
-        function formatDate(date) {
-            return date.toLocaleDateString('pl-PL', { day: '2-digit', month: '2-digit', year: 'numeric' });
-        }
-
-        function shouldShowNextWeek() {
-            const now = new Date();
-            const currentDay = now.getDay();
-            const currentHour = now.getHours();
-            const currentMinutes = now.getMinutes();
-            
-            return (currentDay === 5 && (currentHour > 21 || (currentHour === 21 && currentMinutes >= 15))) || 
-                currentDay === 6 || 
-                currentDay === 0;
-        }
-
-        let currentWeekOffset = 0;
-
-        function getCurrentOrNextWeekRange() {
-    let date = new Date();
-    
-    if (shouldShowNextWeek()) {
-        // Znajdź następny poniedziałek
-        while (date.getDay() !== 1) {
-            date.setDate(date.getDate() + 1);
-        }
-        // Dodaj dodatkowy tydzień jeśli currentWeekOffset > 0
-        if (currentWeekOffset > 0) {
-            date.setDate(date.getDate() + 7);
-        }
-    } else {
-        date.setDate(date.getDate() + (7 * currentWeekOffset));
-    }
-    
-    return getWeekRange(date);
-}
 
 
-        function moveToNextWeek() {
-            const isWeekend = new Date().getDay() === 0 || new Date().getDay() === 6;
-            
-            if (isWeekend) {
-                // W weekend pokazujemy następny tydzień jako "bieżący"
-                if (currentWeekOffset < 1) {
-                    currentWeekOffset++;
-                    updateWeekButtons();
-                    const selectedGroup = groupSelect.value;
-                    if (selectedGroup) {
-                        loadPlanAndComparisons(planSelect.value, selectedGroup);
-                    }
-                }
-            } else {
-                // Normalne zachowanie w dni robocze
-                if (currentWeekOffset < 1) {
-                    currentWeekOffset++;
-                    updateWeekButtons();
-                    const selectedGroup = groupSelect.value;
-                    if (selectedGroup) {
-                        loadPlanAndComparisons(planSelect.value, selectedGroup);
-                    }
-                }
-            }
-        }
-
-        function moveToPrevWeek() {
-    if (shouldShowNextWeek() && currentWeekOffset > 0) {
-        // W weekend pozwól na cofnięcie do najbliższego tygodnia
-        currentWeekOffset--;
-        updateWeekButtons();
-        const selectedGroup = groupSelect.value;
-        if (selectedGroup) {
-            loadPlanAndComparisons(planSelect.value, selectedGroup);
-        }
-    } else if (!shouldShowNextWeek() && currentWeekOffset > 0) {
-        // Normalne zachowanie w dni robocze
-        currentWeekOffset--;
-        updateWeekButtons();
-        const selectedGroup = groupSelect.value;
-        if (selectedGroup) {
-            loadPlanAndComparisons(planSelect.value, selectedGroup);
-        }
-    }
-}
-
-function updateWeekButtons() {
-    const prevWeekBtn = document.getElementById('prevWeekBtn');
-    const nextWeekBtn = document.getElementById('nextWeekBtn');
-    
-    if (shouldShowNextWeek()) {
-        // W weekend:
-        // - Zablokuj "poprzedni tydzień" tylko gdy jesteśmy w najbliższym tygodniu
-        // - Pozwól na przejście jeden tydzień do przodu
-        prevWeekBtn.disabled = currentWeekOffset === 0;
-        nextWeekBtn.disabled = currentWeekOffset >= 1;
-    } else {
-        // Normalne zachowanie w dni robocze
-        prevWeekBtn.disabled = currentWeekOffset === 0;
-        nextWeekBtn.disabled = currentWeekOffset === 1;
-    }
-}
-
-        const colors = [
-            'bg-blue-50 border-blue-200 text-blue-800',
-            'bg-green-50 border-green-200 text-green-800',
-            'bg-yellow-50 border-yellow-200 text-yellow-800',
-            'bg-red-50 border-red-200 text-red-800',
-            'bg-indigo-50 border-indigo-200 text-indigo-800',
-            'bg-purple-50 border-purple-200 text-purple-800',
-            'bg-pink-50 border-pink-200 text-pink-800'
-        ];
-        function timeSinceUpdate(timestamp) {
-            const now = new Date();
-            const updateTime = new Date(timestamp);
-            const diffInSeconds = Math.floor((now - updateTime) / 1000);
-
-            const days = Math.floor(diffInSeconds / 86400);
-            const hours = Math.floor((diffInSeconds % 86400) / 3600);
-            const minutes = Math.floor((diffInSeconds % 3600) / 60);
-
-            let result = '';
-            if (days > 0) result += `${days} ${days === 1 ? 'dzień' : 'dni'} `;
-            if (hours > 0) result += `${hours} ${hours === 1 ? 'godzina' : 'godzin'} `;
-            if (minutes > 0) result += `${minutes} ${minutes === 1 ? 'minuta' : 'minut'} `;
-            if (result === '') result = 'mniej niż minutę ';
-
-            return result.trim() + ' temu';
-        }
-
-        function saveSelectedPlan(plan) {
-            localStorage.setItem('selectedPlan', plan);
-        }
-
-        function loadSelectedPlan() {
-            return localStorage.getItem('selectedPlan');
-        }
-
-        function saveSelectedGroup(group) {
-            localStorage.setItem('selectedGroup', group);
-        }
-
-        function loadSelectedGroup() {
-            return localStorage.getItem('selectedGroup');
-        }
-
-        function updateGroupSelect(planElement) {
-            groupSelect.disabled = !planElement;
-            groupSelect.innerHTML = '<option value="">Wybierz grupę</option>';
+        function updatePlanSelect(selectedCategory) {
+            planSelect.disabled = !selectedCategory;
+            planSelect.innerHTML = '<option value="">Wybierz plan</option>';
+            groupSelect.disabled = true;
+            groupSelect.innerHTML = '<option value="">Najpierw wybierz plan</option>';
             planContainer.classList.add('hidden');
             comparisonsContainer.innerHTML = '';
-            
-            if (planElement) {
-                const groups = JSON.parse(planElement.dataset.groups);
-                Object.keys(groups).sort().forEach(group => {
-                    const option = document.createElement('option');
-                    option.value = group;
-                    option.textContent = group;
-                    groupSelect.appendChild(option);
+
+            if (selectedCategory) {
+                // First clear any existing options except the default one
+                Array.from(planSelect.options).forEach(option => {
+                    if (option.value) {
+                        option.remove();
+                    }
                 });
+
+                const semesters = {
+                    {% for collection_name, data in semesters.items() %}
+                    "{{ collection_name }}": {
+                        collection: "{{ collection_name }}",
+                        name: "{{ data.plan_name }}",
+                        groups: {{ data.groups|tojson }},
+                        category: "{{ data.category }}"
+                    },
+                    {% endfor %}
+                };
+
+                // Add options for the selected category
+                Object.values(semesters)
+                    .filter(semester => semester.category === selectedCategory)
+                    .sort((a, b) => a.name.localeCompare(b.name))
+                    .forEach(semester => {
+                        const option = document.createElement('option');
+                        option.value = semester.collection;
+                        option.textContent = semester.name;
+                        option.dataset.groups = JSON.stringify(semester.groups);
+                        option.dataset.category = semester.category;
+                        planSelect.appendChild(option);
+                    });
             }
         }
-
-        planSelect.addEventListener('change', (event) => {
-            const selectedOption = event.target.selectedOptions[0];
-            saveSelectedPlan(event.target.value);
-            updateGroupSelect(selectedOption);
-            groupSelect.value = '';
-            planContainer.classList.add('hidden');
-            comparisonsContainer.innerHTML = '';
-            updateControlsVisibility();
-            updateInterfaceState();
-        });
-        function startCountdown(endTime) {
-            clearInterval(countdownInterval);
-            const infoElement = document.getElementById('current-lesson-info');
-            
-            function updateCountdown() {
-                const now = new Date();
-                const currentTime = now.getHours() * 60 + now.getMinutes();
-                const timeLeft = endTime - currentTime;
-                
-                if (timeLeft <= 0) {
-                    clearInterval(countdownInterval);
-                    highlightCurrentTimeSlot(); // Odśwież po zakończeniu odliczania
-                    return;
-                }
-                
-                const minutes = Math.floor(timeLeft);
-                const seconds = Math.floor((timeLeft - minutes) * 60);
-                const countdownText = formatTimeToDisplay(minutes, seconds);
-                
-                // Aktualizuj tylko część z odliczaniem
-                const currentContent = infoElement.innerHTML;
-                const updatedContent = currentContent.replace(
-                    /Do końca przerwy: <span id="countdown">.*?<\/span>/,
-                    `Do końca przerwy: <span id="countdown">${countdownText}</span>`
-                );
-                infoElement.innerHTML = updatedContent;
-            }
-            
-            updateCountdown(); // Natychmiastowa aktualizacja
-            countdownInterval = setInterval(updateCountdown, 1000);
-        }
-        function convertTimeToMinutes(timeString) {
-            // Usuwamy znaczniki HTML i dodatkowe spacje
-            const cleanTimeString = timeString.replace(/<[^>]*>/g, '').trim();
-            
-            // Obsługa formatu bez dwukropka (np. "815")
-            if (!cleanTimeString.includes(':')) {
-                if (cleanTimeString.length === 3) {
-                    const hours = parseInt(cleanTimeString[0]);
-                    const minutes = parseInt(cleanTimeString.slice(1));
-                    return hours * 60 + minutes;
-                } else if (cleanTimeString.length === 4) {
-                    const hours = parseInt(cleanTimeString.slice(0, 2));
-                    const minutes = parseInt(cleanTimeString.slice(2));
-                    return hours * 60 + minutes;
-                }
-            }
-            
-            // Obsługa formatu z dwukropkiem (np. "8:15")
-            const [hours, minutes] = cleanTimeString.split(':').map(Number);
-            return hours * 60 + (minutes || 0);
-        }
-        function formatMinutesToTime(minutes) {
-            const hours = Math.floor(minutes / 60);
-            const mins = minutes % 60;
-            return `${hours.toString().padStart(2, '0')}:${mins.toString().padStart(2, '0')}`;
-        }
-
-        function formatCellContent(content, isTimeColumn) {
-            if (isTimeColumn) {
-                return formatTimeColumn(content);
-            }
-            const parts = content.split('-');
-            if (parts.length > 1) {
-                return `<span class="subject">${parts[0].trim()}</span>${parts.slice(1).join('-')}`;
-            }
-            return content;
-        }
-        function formatTimeColumn(content) {
-            const times = content.split('-');
-            return times.map(time => {
-                const [hours, minutes] = time.trim().split(/(\d{2})$/);
-                return `${hours}<sup>${minutes}</sup>`;
-            }).join(' - ');
-        }
-        
-
-        function formatTimeToDisplay(minutes, seconds) {
-            return `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
-        }
-
-        function highlightCurrentTimeSlot() {
-            console.log("Rozpoczęcie funkcji highlightCurrentTimeSlot");
-            const now = new Date();
-            const currentDay = now.getDay();
-            const currentTime = now.getHours() * 60 + now.getMinutes();
-            console.log(`Aktualny czas: ${now.getHours()}:${now.getMinutes()}, dzień tygodnia: ${currentDay}`);
-
-            // Jeśli jest weekend, tylko wyświetl informację
-            if (currentDay === 0 || currentDay === 6) {
-                const infoElement = document.getElementById('current-lesson-info');
-                infoElement.innerHTML = "Weekend! Czas wolny od zajęć 🎉";
-                return; // Zakończ funkcję, nie próbuj podświetlać
-            }
-
-            const table = document.querySelector('#plan-content table');
-            if (!table) {
-                console.log("Nie znaleziono tabeli z planem lekcji");
-                return;
-            }
-
-            const rows = table.querySelectorAll('tr');
-            const dayNames = ['Niedziela', 'Poniedziałek', 'Wtorek', 'Środa', 'Czwartek', 'Piątek', 'Sobota'];
-            let currentDayColumn = -1;
-
-            const headerRow = rows[0];
-            headerRow.querySelectorAll('th').forEach((th, index) => {
-                if (th.textContent.trim().startsWith(dayNames[currentDay])) {
-                    currentDayColumn = index;
-                    console.log(`Znaleziono kolumnę dla ${dayNames[currentDay]}: ${currentDayColumn}`);
-                }
-        });
-
-    if (currentDayColumn === -1) {
-        console.log("Nie znaleziono kolumny dla aktualnego dnia tygodnia");
-        return;
-    }
-
-    table.querySelectorAll('.current-time-highlight').forEach(cell => {
-        cell.classList.remove('current-time-highlight');
-    });
-
-    let currentLessonInfo = "";
-    let nextLessonInfo = "";
-    let isBreak = false;
-    let breakEndTime = 0;
-
-    if (currentDay === 0 || currentDay === 6) {
-        currentLessonInfo = "Weekend! Czas na relaks i zabawę! 🎉";
-    } else {
-        for (let i = 1; i < rows.length; i++) {
-            const timeCell = rows[i].querySelector('td:first-child');
-            if (!timeCell) continue;
-
-            const timeRange = timeCell.textContent.replace(/<[^>]*>/g, '').split('-');
-            if (timeRange.length !== 2) continue;
-
-            const startTime = convertTimeToMinutes(timeRange[0].trim());
-            const endTime = convertTimeToMinutes(timeRange[1].trim());
-
-            console.log(`Sprawdzanie przedziału: ${timeRange[0].trim()} - ${timeRange[1].trim()}`);
-            console.log(`Przekonwertowany czas: ${startTime} - ${endTime}`);
-
-            if (currentTime >= startTime && currentTime < endTime) {
-                const cellToHighlight = rows[i].querySelectorAll('td')[currentDayColumn];
-                if (cellToHighlight) {
-                    cellToHighlight.classList.add('current-time-highlight');
-                    console.log(`Podświetlono komórkę: rząd ${i}, kolumna ${currentDayColumn}`);
-                    const lessonContent = cellToHighlight.innerHTML.trim();
-                    const timeToEnd = endTime - currentTime;
-                    currentLessonInfo = lessonContent ? 
-                        `Aktualna lekcja: ${lessonContent}<br>Koniec za: ${formatMinutesToTime(timeToEnd)}` :
-                        "Czas wolny!";
-                    
-                    // Check for next lesson
-                    if (i < rows.length - 1) {
-                        const nextCell = rows[i+1].querySelectorAll('td')[currentDayColumn];
-                        if (nextCell) {
-                            console.log("Znaleziono komórkę następnej lekcji:", nextCell);
-                            const nextLessonContent = nextCell.innerHTML ? nextCell.innerHTML.trim() : '';
-                            console.log("Zawartość następnej lekcji:", nextLessonContent);
-                        
-                            const nextTimeCell = rows[i+1].querySelector('td:first-child');
-                            console.log("Komórka czasu następnej lekcji:", nextTimeCell);
-                        
-                            if (nextTimeCell && nextTimeCell.textContent) {
-                                const nextStartTime = convertTimeToMinutes(nextTimeCell.textContent.replace(/<[^>]*>/g, '').split('-')[0].trim());
-                                console.log("Czas rozpoczęcia następnej lekcji:", nextStartTime);
-                                nextLessonInfo = nextLessonContent ? 
-                                    `Następna lekcja: ${nextLessonContent}<br>Rozpoczyna się o: ${formatMinutesToTime(nextStartTime)}` :
-                                    "Brak następnych lekcji";
-                            } else {
-                                console.log("Brak danych o czasie następnej lekcji");
-                                nextLessonInfo = nextLessonContent ? 
-                                    `Następna lekcja: ${nextLessonContent}` :
-                                    "Brak następnych lekcji";
-                            }
-                        } else {
-                            console.log("Nie znaleziono komórki następnej lekcji");
-                        }
-                    }
-                } else {
-                    console.log(`Nie znaleziono komórki do podświetlenia: rząd ${i}, kolumna ${currentDayColumn}`);
-                }
-                break;
-            } else if (i > 1 && currentTime >= convertTimeToMinutes(rows[i-1].querySelector('td:first-child').textContent.replace(/<[^>]*>/g, '').split('-')[1].trim()) && currentTime < startTime) {
-                isBreak = true;
-                breakEndTime = startTime;
-                const breakDuration = startTime - currentTime;
-                currentLessonInfo = `Trwa przerwa!<br>Do końca przerwy: <span id="countdown">${formatTimeToDisplay(Math.floor(breakDuration), Math.floor((breakDuration % 1) * 60))}</span>`;
-                
-                // Add next lesson info
-                const nextCell = rows[i].querySelectorAll('td')[currentDayColumn];
-                if (nextCell) {
-                    const nextLessonName = nextCell.querySelector('.subject')?.textContent.trim() || nextCell.textContent.trim();
-                    nextLessonInfo = nextLessonName ? 
-                        `Następna lekcja: ${nextLessonName}<br>Rozpoczyna się o: ${formatMinutesToTime(startTime)}` :
-                        "Brak następnych lekcji";
-                }
-                break;
-            }
-        }
-        if (!currentLessonInfo) {
-            currentLessonInfo = "Brak lekcji.";
-        }
-    }
-
-    const infoElement = document.getElementById('current-lesson-info');
-    infoElement.innerHTML = `${currentLessonInfo}<br>${nextLessonInfo}`;
-
-    if (isBreak) {
-        startCountdown(breakEndTime);
-    } else {
-        clearInterval(countdownInterval);
-    }
-    
-    // Scroll only on initial page load
-    if (!window.initialScrollDone && window.innerWidth <= 640) {
-        const highlightedCell = table.querySelector('.current-time-highlight');
-        if (highlightedCell) {
-            highlightedCell.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'center' });
-            window.initialScrollDone = true;
-        }
-    }
-}
-
-        async function loadPlanAndComparisons(selectedPlan, selectedGroup) {
-            if (selectedPlan && selectedGroup) {
-                try {
-                    console.log("Pobieranie planu dla:", selectedPlan, selectedGroup);
-                    const planResponse = await axios.get(`/api/plan/${selectedPlan}/${selectedGroup}`);
-                    console.log("Otrzymano odpowiedź:", planResponse.data);
-                    console.log("Plan HTML:", planResponse.data.plan_html);
-                    console.log("Typ plan_html:", typeof planResponse.data.plan_html);
-                    
-                    if (!planResponse.data.plan_html) {
-                        throw new Error("Otrzymano pusty plan HTML");
-                    }
-
-                    // Sprawdź czy plan_html jest stringiem i czy nie jest pusty
-                    if (typeof planResponse.data.plan_html !== 'string') {
-                        console.error("plan_html nie jest stringiem:", planResponse.data.plan_html);
-                        throw new Error("Nieprawidłowy format danych planu");
-                    }
-
-                    // Sprawdź czy plan zawiera tabelę
-                    if (!planResponse.data.plan_html.includes('<table')) {
-                        console.error("plan_html nie zawiera tabeli:", planResponse.data.plan_html);
-                        throw new Error("Otrzymany plan nie zawiera tabeli");
-                    }
-                    try {
-                        const { group_name, plan_html, timestamp } = planResponse.data;
-                        
-                        console.log("Parsowanie danych odpowiedzi:");
-                        console.log("- group_name:", group_name);
-                        console.log("- timestamp:", timestamp);
-                        console.log("- plan_html długość:", plan_html ? plan_html.length : 0);
-                        
-                        if (!group_name || !timestamp || !plan_html) {
-                            throw new Error("Brak wymaganych danych w odpowiedzi");
-                        }
-                        
-                        groupNameElement.textContent = group_name;
-                        lastUpdateTimestamp = new Date(timestamp);
-                        updateTimeSinceLastUpdate();
-                    } catch (parseError) {
-                        console.error("Błąd podczas parsowania danych odpowiedzi:", parseError);
-                        throw parseError;
-                    }
-                    
-                    const weekRange = getCurrentOrNextWeekRange();
-                    weekRangeElement.textContent = `Tydzień: ${formatDate(weekRange.start)} - ${formatDate(weekRange.end)}`;
-                    
-                    let table;
-                    try {
-                        console.log("Próba wstawienia HTML do elementu");
-                        planContentElement.innerHTML = planResponse.data.plan_html;
-                        console.log("HTML wstawiony pomyślnie");
-                        
-                        table = planContentElement.querySelector('table');
-                        if (!table) {
-                            console.error("Nie znaleziono tabeli po wstawieniu HTML");
-                            throw new Error("Nie można znaleźć tabeli w planie");
-                        }
-                        console.log("Znaleziono tabelę w planie");
-                    
-                        if (filterToggle.checked && table) {
-                            filterPlanForCurrentWeek(table, weekRange);
-                        }
-                    } catch (renderError) {
-                        console.error("Błąd podczas renderowania tabeli:", renderError);
-                        throw renderError;
-                    }
-                    
-                    if (table) {
-                        table.classList.add('w-full', 'border-collapse', 'border', 'border-gray-200');
-                        const rows = table.querySelectorAll('tr');
-                        rows.forEach((row, rowIndex) => {
-                            const cells = row.querySelectorAll('th, td');
-                            cells.forEach((cell, cellIndex) => {
-                                cell.classList.add('border', 'border-gray-200', 'p-2', 'text-sm');
-                                if (cell.tagName === 'TD') {
-                                    const isTimeColumn = cellIndex === 0;
-                                    cell.innerHTML = formatCellContent(cell.textContent, isTimeColumn);
-                                }
-                            });
-                        });
-                    }
-                    
-                    planContainer.classList.remove('hidden');
-
-                    console.log("Plan lekcji załadowany, rozpoczęcie podświetlania");
-                    highlightCurrentTimeSlot();
-                    setInterval(highlightCurrentTimeSlot, 60000); // Update every minute
-
-                    const comparisonsResponse = await axios.get(`/api/comparisons/${selectedPlan}/${selectedGroup}`);
-                    const comparisons = comparisonsResponse.data;
-                    console.log("Otrzymane porównania:", comparisons);
-
-                    comparisonsContainer.innerHTML = comparisons
-                        .filter(comparison => {
-                            console.log("Sprawdzanie porównania:", comparison);
-                            console.log("Wyniki dla grupy:", comparison.results?.[selectedGroup]);
-                            return comparison.results?.[selectedGroup]?.trim() !== "Brak różnic.";
-                        })
-                        .map((comparison, index) => `
-                            <div class="comparison-card ${colors[index % colors.length]} p-6 rounded-lg shadow-md border-l-4">
-                                <h3 class="text-xl font-semibold mb-3">Porównanie z ${new Date(comparison.timestamp).toLocaleString()}</h3>
-                                <p class="mb-1"><strong>Nowszy plan:</strong> ${new Date(comparison.newer_plan_timestamp).toLocaleString()}</p>
-                                <p class="mb-1"><strong>Starszy plan:</strong> ${new Date(comparison.older_plan_timestamp).toLocaleString()}</p>
-                                <div class="mt-3">
-                                    <h4 class="font-semibold mb-2">Zmiany:</h4>
-                                    <p>${comparison.results[selectedGroup]}</p>
-                                </div>
-                            </div>
-                        `).join('');
-
-                    if (comparisonsContainer.innerHTML === '') {
-                        comparisonsContainer.innerHTML = '<p class="text-xl text-center text-gray-600">Brak zmian w ostatnich porównaniach.</p>';
-                    }
-
-                        } catch (error) {
-                    console.error('Błąd podczas pobierania danych:', error);
-                    console.error('Szczegóły błędu:', error.response?.data || error.message);
-                    console.error('Stack trace:', error.stack);
-                    console.error('Pełny obiekt błędu:', JSON.stringify(error, null, 2));
-                    planContainer.classList.add('hidden');
-                    
-                    let errorMessage = 'Wystąpił błąd podczas pobierania danych.';
-                    if (error.response?.data?.detail?.message) {
-                        errorMessage = `${error.response.data.detail.message}<br>`;
-                        if (error.response.data.detail.available_groups) {
-                            errorMessage += '<br>Dostępne grupy:<br>';
-                            error.response.data.detail.available_groups.forEach(group => {
-                                errorMessage += `- ${group}<br>`;
-                            });
-                        }
-                    } else {
-                        errorMessage += `<br>Szczegóły błędu: ${error.message}`;
-                    }
-                    
-                    comparisonsContainer.innerHTML = `
-                        <div class="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 rounded">
-                            <p class="text-xl mb-2">Błąd</p>
-                            <p>${errorMessage}</p>
-                        </div>`;
-                }
-            } else {
-                planContainer.classList.add('hidden');
-                comparisonsContainer.innerHTML = '';
-            }
-        }
-        let lastUpdateTimestamp;
-
-        function updateTimeSinceLastUpdate() {
-            if (lastUpdateTimestamp) {
-                const timeSince = timeSinceUpdate(lastUpdateTimestamp);
-                planDateElement.textContent = `Data ostatniej zmiany planu: ${lastUpdateTimestamp.toLocaleString()} (${timeSince})`;
-            }
-        }
-        groupSelect.addEventListener('change', async (event) => {
-            const selectedPlan = planSelect.value;
-            const selectedGroup = event.target.value;
-            saveSelectedGroup(selectedGroup);
-            await loadPlanAndComparisons(selectedPlan, selectedGroup);
-            updateControlsVisibility();
-            updateInterfaceState();
-        });
-
-        function filterPlanForCurrentWeek(table, weekRange) {
-    if (!table) return;
-
-    const rows = table.querySelectorAll('tr');
-    const headerRow = rows[0];
-    const headerCells = headerRow.querySelectorAll('th');
-    
-    // Aktualizuj nagłówki z datami
-    headerCells.forEach((cell, index) => {
-        if (index > 0 && index <= 5) { // Pomijamy pierwszą kolumnę (godziny)
-            const dayOfWeek = index - 1;
-            const date = new Date(weekRange.start);
-            date.setDate(weekRange.start.getDate() + dayOfWeek);
-            const originalText = cell.textContent.split('(')[0].trim(); // Zachowaj oryginalną nazwę dnia
-            cell.textContent = `${originalText} (${formatDate(date).slice(0, 5)})`;
-        }
-    });
-
-    // Filtruj wiersze z lekcjami
-    for (let i = 1; i < rows.length; i++) {
-        const row = rows[i];
-        const cells = row.querySelectorAll('td');
-        let hasLessonsInWeek = false;
-
-        cells.forEach((cell, cellIndex) => {
-            if (cellIndex === 0) return; // Pomijamy kolumnę z godzinami
-
-            const cellContent = cell.innerHTML;
-            if (cellContent && cellContent.trim() !== '') {
-                const currentDate = new Date(weekRange.start);
-                currentDate.setDate(weekRange.start.getDate() + (cellIndex - 1));
-                const dateStr = formatDate(currentDate).slice(0, 5);
-                
-                if (!cellContent.includes(dateStr)) {
-                    cell.innerHTML = '';
-                } else {
-                    hasLessonsInWeek = true;
-                }
-            }
-        });
-
-        row.style.display = hasLessonsInWeek ? '' : 'none';
-    }
-}
-
-        function setCookie(name, value, days) {
-            const date = new Date();
-            date.setTime(date.getTime() + (days * 24 * 60 * 60 * 1000));
-            const expires = "expires=" + date.toUTCString();
-            document.cookie = name + "=" + value + ";" + expires + ";path=/";
-        }
-
-        function getCookie(name) {
-            const nameEQ = name + "=";
-            const ca = document.cookie.split(';');
-            for (let i = 0; i < ca.length; i++) {
-                let c = ca[i];
-                while (c.charAt(0) === ' ') c = c.substring(1, c.length);
-                if (c.indexOf(nameEQ) === 0) return c.substring(nameEQ.length, c.length);
-            }
-            return null;
-        }
-
-        function toggleFilterPlan() {
-            const isChecked = filterToggle.checked;
-            setCookie('filterToggle', isChecked, 7); // Save state for 7 days
-            const selectedPlan = planSelect.value;
-            const selectedGroup = groupSelect.value;
-            if (selectedPlan && selectedGroup) {
-                loadPlanAndComparisons(selectedPlan, selectedGroup);
-            }
-        }
-        function updateControlsVisibility() {
-            const selectedPlan = planSelect.value;
-            const selectedGroup = groupSelect.value;
-            const controlsContainer = document.getElementById('controls-container');
-            const comparisonsSection = document.getElementById('comparisons-section');
-            
-            if (selectedPlan && selectedGroup) {
-                controlsContainer.classList.remove('hidden');
-                comparisonsSection.style.display = showComparer ? '' : 'none';
-            } else {
-                controlsContainer.classList.add('hidden');
-                comparisonsSection.classList.add('hidden');
-            }
-        }
-        window.addEventListener('DOMContentLoaded', async () => {
-            const filterToggleState = getCookie('filterToggle');
-            if (filterToggleState !== null) {
-                filterToggle.checked = (filterToggleState === 'true');
-            }
-            if (lastSelectedPlan) {
-                planSelect.value = lastSelectedPlan;
-                const selectedOption = planSelect.selectedOptions[0];
-                updateGroupSelect(selectedOption);
-                
-                if (lastSelectedGroup) {
-                    groupSelect.value = lastSelectedGroup;
-                    await loadPlanAndComparisons(lastSelectedPlan, lastSelectedGroup);
-                }
-                // Aktualizuj czas co minutę
-                setInterval(updateTimeSinceLastUpdate, 60000);
-            }
-            checkServerStatus();
-            
-            // Dodaj nasłuchiwanie zdarzeń dla przełącznika filtrowania
-            filterToggle.addEventListener('change', toggleFilterPlan);
-
-            // Dodaj obsługę przycisków "Poprzedni tydzień" i "Następny tydzień"
-            document.getElementById('prevWeekBtn').addEventListener('click', moveToPrevWeek);
-            document.getElementById('nextWeekBtn').addEventListener('click', moveToNextWeek);
-
-            // Inicjalizacja stanu przycisków
-            updateWeekButtons();
-            updateControlsVisibility();
-            updateInterfaceState();
-        });
-        let lastUpdateTime = null;
-        async function checkServerStatus() {
-            const indicator = document.getElementById('serverStatusIndicator');
-            const statusText = document.getElementById('serverStatusText');
-            const tooltip = document.getElementById('serverStatusTooltip');
-            try {
-                const response = await axios.get('/api/status');
-                if (response.data.status === 'active') {
-                    indicator.classList.add('active');
-                    indicator.classList.remove('inactive');
-                    statusText.textContent = 'Online';
-                    statusText.style.color = '#10B981';
-                } else {
-                    indicator.classList.remove('active');
-                    indicator.classList.add('inactive');
-                    statusText.textContent = 'Offline';
-                    statusText.style.color = '#EF4444';
-                }
-                lastUpdateTime = new Date(response.data.last_check);
-                tooltip.textContent = `Ostatnia aktualizacja: ${lastUpdateTime.toLocaleString()}`;
-            } catch (error) {
-                console.error('Error checking server status:', error);
-                indicator.classList.remove('active');
-                indicator.classList.add('inactive');
-                statusText.textContent = 'Błąd połączenia';
-                statusText.style.color = '#EF4444';
-                tooltip.textContent = 'Nie można połączyć się z serwerem';
-            }
-        }
-
-        // Check server status every second
-        setInterval(checkServerStatus, 10000);
-        // Initial check when the page loads
-        window.addEventListener('DOMContentLoaded', async () => {
-            const lastSelectedGroup = loadSelectedGroup();
-            if (lastSelectedGroup) {
-                groupSelect.value = lastSelectedGroup;
-                await loadPlanAndComparisons(lastSelectedGroup);
-            }
-            checkServerStatus();
-        });
-        
     </script>
-</body>
+    <script src="static/js/plan.js"></script>
+    <script>
+      // Wrap cell contents after plan is loaded
+      const observer = new MutationObserver((mutations) => {
+        mutations.forEach((mutation) => {
+          if (mutation.target.id === 'plan-content') {
+            const cells = document.querySelectorAll('#plan-content td:not(:first-child)');
+            cells.forEach(wrapCellContent);
+          }
+        });
+      });
+      
+      observer.observe(document.getElementById('plan-content'), {
+        childList: true,
+        subtree: true
+      });
+    </script>
+  </body>
 </html>

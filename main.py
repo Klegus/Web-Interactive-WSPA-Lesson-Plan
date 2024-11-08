@@ -16,6 +16,8 @@ if not os.environ.get("MONGO_URI"):
     MONGO_URI = os.getenv("MONGO_URI")
     DEV = os.getenv("DEV")
     BACKEND_URL = os.getenv("BACKEND_URL")
+    COMPARER = os.environ.get("COMPARER", "false").lower() == "true"
+
 else:
     MONGO_URI = os.environ.get("MONGO_URI")
     DEV = os.environ.get("DEV")
@@ -52,7 +54,8 @@ def get_semester_collections() -> Dict[str, Dict]:
                 collections_data[collection_name] = {
                     "plan_name": latest_plan["plan_name"],
                     "groups": latest_plan["groups"],
-                    "timestamp": latest_plan["timestamp"]
+                    "timestamp": latest_plan["timestamp"],
+                    "category": latest_plan.get("category", "st")  # Default to "st" if no category
                 }
     return collections_data
 
@@ -96,12 +99,13 @@ async def get_plan(collection_name: str, group_name: str):
         plan_html = latest_plan["groups"][group_name].replace('\n', ' ')
         #print(f"Długość pobranego HTML: {len(plan_html)}")
         #print(f"Fragment HTML: {plan_html[:200]}...")  # Pokaż początek planu
-        
+    
         response = {
             "plan_name": latest_plan["plan_name"],
             "group_name": group_name,
             "plan_html": plan_html,
-            "timestamp": latest_plan["timestamp"]
+            "timestamp": latest_plan["timestamp"],
+            "category": latest_plan.get("category", "st")  # domyślnie "st" jeśli nie określono
         }
         print("Wysyłanie odpowiedzi:", response)
         return response
@@ -153,6 +157,6 @@ async def get_status():
 if DEV == 'True':
     if __name__ == "__main__":
         import uvicorn
-        uvicorn.run(app, host="127.0.0.1", port=8000)
+        uvicorn.run(app, host="0.0.0.0", port=8088)
 else:
     handler = Mangum(app)
