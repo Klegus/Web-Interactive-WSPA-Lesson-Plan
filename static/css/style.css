@@ -115,61 +115,119 @@ input:checked + .slider:before {
     -webkit-overflow-scrolling: touch;
     max-width: 100%;
     position: relative;
-  }
-
-  #plan-content::after {
-    content: "Użyj gestów przybliżania aby powiększyć plan";
-    position: absolute;
-    bottom: -25px;
-    left: 0;
-    width: 100%;
-    text-align: center;
-    font-size: 0.7rem;
-    color: #666;
+    padding-bottom: 30px;
   }
 
   #plan-content table {
     min-width: 100%;
     border-collapse: collapse;
-    font-size: 0.65rem;
+    font-size: 0.8rem; /* Increased base font size */
   }
 
   #plan-content td {
-    padding: 2px;
+    padding: 8px 4px; /* Increased padding */
+    min-height: 50px; /* Increased minimum height */
     height: auto;
-    min-height: 35px;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
+    white-space: normal; /* Allow text wrapping */
+    overflow: visible; /* Show overflow content */
+    text-overflow: clip;
+    line-height: 1.3; /* Improved line height for readability */
   }
 
   #plan-content td span.subject {
-    font-size: 0.7rem;
+    font-size: 0.85rem; /* Increased subject font size */
+    margin-bottom: 4px;
     display: block;
+    white-space: normal; /* Allow subject text wrapping */
+    overflow: visible;
+    text-overflow: clip;
+    line-height: 1.4;
+  }
+
+  /* Time column formatting */
+  #plan-content td:first-child {
+    font-weight: 600;
+    white-space: nowrap; /* Keep time on one line */
+    min-width: 60px; /* Ensure time column has enough space */
+  }
+
+  /* Header cells */
+  #plan-content th {
+    padding: 8px 4px;
+    font-size: 0.85rem;
+    font-weight: 600;
     white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
+    background-color: white;
+    position: sticky;
+    top: 0;
+    z-index: 10;
   }
 
-  /* Disable animations on mobile */
-  #plan-content td:hover {
-    background-color: transparent;
+  /* Alternating row colors for better readability */
+  #plan-content tr:nth-child(even) {
+    background-color: rgba(0, 0, 0, 0.02);
   }
 
-  .current-time-highlight {
-    animation: none;
-    background-color: rgba(227, 30, 36, 0.1);
+  /* Cell with content styling */
+  #plan-content td:not(:empty) {
+    background-color: rgba(255, 255, 255, 0.8);
+    border-radius: 4px;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+  }
+
+  /* Enhanced tap target size */
+  #plan-content td {
+    min-width: 80px; /* Increased minimum width */
   }
 }
 
-/* Extra small devices */
-@media (max-width: 360px) {
+/* Larger phones (iPhone Pro Max etc) */
+@media (min-width: 429px) and (max-width: 640px) {
   #plan-content table {
-    font-size: 0.6rem;
+    font-size: 0.85rem;
+  }
+  
+  #plan-content td {
+    padding: 10px 6px;
+    min-height: 55px;
   }
   
   #plan-content td span.subject {
-    font-size: 0.65rem;
+    font-size: 0.9rem;
+  }
+}
+/* Medium phones (iPhone 12/13/14) */
+@media (min-width: 376px) and (max-width: 428px) {
+  #plan-content table {
+    font-size: 0.8rem;
+  }
+  
+  #plan-content td {
+    padding: 8px 4px;
+    min-height: 50px;
+  }
+  
+  #plan-content td span.subject {
+    font-size: 0.85rem;
+  }
+}
+
+@media (max-width: 375px) {
+  #plan-content table {
+    font-size: 0.75rem;
+  }
+  
+  #plan-content td {
+    padding: 6px 3px;
+    min-height: 45px;
+  }
+  
+  #plan-content td span.subject {
+    font-size: 0.8rem;
+  }
+  
+  #plan-content td:first-child {
+    min-width: 50px;
   }
 }
 #countdown {
