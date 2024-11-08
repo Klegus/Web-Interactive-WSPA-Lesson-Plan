@@ -900,10 +900,14 @@ window.addEventListener("DOMContentLoaded", async () => {
   updateInterfaceState();
 });
 let lastUpdateTime = null;
+let failedAttempts = 0;
+let lastFailTime = null;
+
 async function checkServerStatus() {
   const indicator = document.getElementById("serverStatusIndicator");
   const statusText = document.getElementById("serverStatusText");
   const tooltip = document.getElementById("serverStatusTooltip");
+
   try {
     const response = await axios.get("/api/status");
     if (response.data.status === "active") {
@@ -911,6 +915,8 @@ async function checkServerStatus() {
       indicator.classList.remove("inactive");
       statusText.textContent = "Online";
       statusText.style.color = "#10B981";
+      failedAttempts = 0; // Reset licznika błędów
+      lastFailTime = null;
     } else {
       indicator.classList.remove("active");
       indicator.classList.add("inactive");
@@ -921,11 +927,28 @@ async function checkServerStatus() {
     tooltip.textContent = `Ostatnia aktualizacja: ${lastUpdateTime.toLocaleString()}`;
   } catch (error) {
     console.error("Error checking server status:", error);
-    indicator.classList.remove("active");
-    indicator.classList.add("inactive");
-    statusText.textContent = "Błąd połączenia";
-    statusText.style.color = "#EF4444";
-    tooltip.textContent = "Nie można połączyć się z serwerem";
+    
+    const now = new Date();
+    if (!lastFailTime) {
+      lastFailTime = now;
+    }
+    
+    failedAttempts++;
+    
+    // Sprawdź czy minęło więcej niż 10 sekund od pierwszego błędu
+    const timeSinceFirstFail = (now - lastFailTime) / 1000;
+    
+    if (failedAttempts >= 3 && timeSinceFirstFail <= 10) {
+      indicator.classList.remove("active");
+      indicator.classList.add("inactive");
+      statusText.textContent = "Błąd połączenia";
+      statusText.style.color = "#EF4444";
+      tooltip.textContent = "Nie można połączyć się z serwerem";
+    } else if (timeSinceFirstFail > 10) {
+      // Reset licznika po 10 sekundach
+      failedAttempts = 1;
+      lastFailTime = now;
+    }
   }
 }
 groupSelect.addEventListener("change", async (event) => {
