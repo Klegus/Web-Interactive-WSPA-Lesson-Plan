@@ -258,7 +258,15 @@ select:focus {
 }
 
 .selection-container.expanded {
-  max-width: 1200px;
+  max-width: calc(100vw - 2rem);
+  margin: 0 1rem;
+}
+
+@media (min-width: 1921px) {
+  .selection-container.expanded {
+    max-width: 1900px;
+    margin: 0 auto;
+  }
 }
 
 .logo-container {
