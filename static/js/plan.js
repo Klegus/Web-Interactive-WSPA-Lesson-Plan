@@ -431,16 +431,20 @@ function highlightCurrentTimeSlot() {
                   "Czas rozpoczęcia następnej lekcji:",
                   nextStartTime
                 );
-                nextLessonInfo = nextLessonContent
-                  ? `Następna lekcja: ${nextLessonContent}<br>Rozpoczyna się o: ${formatMinutesToTime(
-                      nextStartTime
-                    )}`
-                  : "Brak następnych lekcji";
+                if (nextLessonContent) {
+                  nextLessonInfo = `Następna lekcja: ${nextLessonContent}<br>Rozpoczyna się o: ${formatMinutesToTime(
+                    nextStartTime
+                  )}`;
+                } else if (!lessonContent) {
+                  nextLessonInfo = "Brak następnych lekcji";
+                }
               } else {
                 console.log("Brak danych o czasie następnej lekcji");
-                nextLessonInfo = nextLessonContent
-                  ? `Następna lekcja: ${nextLessonContent}`
-                  : "Brak następnych lekcji";
+                if (nextLessonContent) {
+                  nextLessonInfo = `Następna lekcja: ${nextLessonContent}`;
+                } else if (!lessonContent) {
+                  nextLessonInfo = "Brak następnych lekcji";
+                }
               }
             } else {
               console.log("Nie znaleziono komórki następnej lekcji");
