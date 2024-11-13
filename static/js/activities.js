@@ -58,7 +58,7 @@ function createActivityElement(activity) {
     
     div.className = `activity-item p-4 border rounded-lg transition-colors ${
         isNew ? 'border-blue-400 bg-blue-50' : 'border-gray-200'
-    } hover:bg-gray-50 cursor-pointer`;
+    } ${activity.type === 'resource' ? '' : 'hover:bg-gray-50 cursor-pointer'}`;
     
     div.setAttribute('data-activity-id', activity.id);
     div.setAttribute('data-expanded', 'false');
@@ -87,44 +87,67 @@ function createActivityElement(activity) {
             </div>
             <span class="text-sm text-gray-500">${relativeDate}</span>
         </div>
-        <div class="content-section mt-2 hidden">
-            <div class="prose max-w-none">
-                ${activity.content_html || activity.content_text || activity.content || ''}
-                ${imagesHtml}
+        ${activity.type === 'resource' ? `
+            <div class="mt-2">
+                <a href="${activity.url}" target="_blank" class="inline-block px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors">Otwórz →</a>
             </div>
-        </div>
-        <div class="mt-2">
-            ${activity.url ? `<a href="${activity.url}" target="_blank" class="text-blue-600 hover:text-blue-800">Otwórz →</a>` : ''}
-        </div>
+        ` : `
+            <div class="content-section mt-2 hidden">
+                <div class="prose max-w-none">
+                    ${activity.content_html || activity.content_text || activity.content || ''}
+                    ${imagesHtml}
+                </div>
+            </div>
+            ${activity.url ? `
+                <div class="mt-2">
+                    <a href="${activity.url}" target="_blank" class="text-blue-600 hover:text-blue-800">Otwórz →</a>
+                </div>
+            ` : ''}
+        `}
     `;
 
 
-    // Obsługa zdarzeń
-    div.addEventListener('click', (e) => {
-        // Ignoruj kliknięcia w linki
-        if (e.target.tagName === 'A') {
-            return;
-        }
-
-        if (isNew) {
-            markActivityAsRead(activity.id); // Zmiana z _id na id
-            div.classList.remove('border-blue-400', 'bg-blue-50');
-            div.classList.add('border-gray-200');
-            const newBadge = div.querySelector('.bg-blue-500');
-            if (newBadge) {
-                newBadge.remove();
+    // Obsługa zdarzeń tylko dla typów page i label
+    if (activity.type !== 'resource') {
+        div.addEventListener('click', (e) => {
+            // Ignoruj kliknięcia w linki
+            if (e.target.tagName === 'A') {
+                return;
             }
-        }
 
-        // Obsługa rozwijania/zwijania zawartości
-        const contentSection = div.querySelector('.content-section');
-        const isExpanded = div.getAttribute('data-expanded') === 'true';
-        
-        if (contentSection) {
-            contentSection.classList.toggle('hidden');
-            div.setAttribute('data-expanded', !isExpanded);
-        }
-    });
+            if (isNew) {
+                markActivityAsRead(activity.id);
+                div.classList.remove('border-blue-400', 'bg-blue-50');
+                div.classList.add('border-gray-200');
+                const newBadge = div.querySelector('.bg-blue-500');
+                if (newBadge) {
+                    newBadge.remove();
+                }
+            }
+
+            // Obsługa rozwijania/zwijania zawartości
+            const contentSection = div.querySelector('.content-section');
+            const isExpanded = div.getAttribute('data-expanded') === 'true';
+            
+            if (contentSection) {
+                contentSection.classList.toggle('hidden');
+                div.setAttribute('data-expanded', !isExpanded);
+            }
+        });
+    } else {
+        // Dla resource oznacz jako przeczytane przy najechaniu
+        div.addEventListener('mouseenter', () => {
+            if (isNew) {
+                markActivityAsRead(activity.id);
+                div.classList.remove('border-blue-400', 'bg-blue-50');
+                div.classList.add('border-gray-200');
+                const newBadge = div.querySelector('.bg-blue-500');
+                if (newBadge) {
+                    newBadge.remove();
+                }
+            }
+        });
+    }
 
     // Obsługa najechania myszką
     div.addEventListener('mouseenter', () => {
