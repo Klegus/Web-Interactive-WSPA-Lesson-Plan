@@ -201,7 +201,17 @@ async def get_activities(
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
+@app.get("/api/activities")
+async def read_activities(
+    skip: int = 0,
+    limit: int = 20,
+    start_date: Optional[str] = None,
+    end_date: Optional[str] = None
+):
+    return await get_activities(skip, limit, start_date, end_date)
+
 @app.get("/api/status")
+async def get_status():
     try:
         async with httpx.AsyncClient() as client:
             response = await client.get("http://37.27.207.141/status")
