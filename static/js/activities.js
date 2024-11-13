@@ -1,3 +1,36 @@
+// Funkcje pomocnicze do obsługi przeczytanych aktywności
+function getReadActivities() {
+    const readActivities = localStorage.getItem('readActivities');
+    return readActivities ? JSON.parse(readActivities) : {};
+}
+
+function markActivityAsRead(activityId) {
+    const readActivities = getReadActivities();
+    readActivities[activityId] = Date.now();
+    localStorage.setItem('readActivities', JSON.stringify(readActivities));
+}
+
+function isActivityNew(activity) {
+    const readActivities = getReadActivities();
+    return !readActivities[activity._id];
+}
+
+// Funkcja formatująca względną datę
+function formatRelativeDate(date) {
+    const now = new Date();
+    const activityDate = new Date(date);
+    const diffTime = Math.abs(now - activityDate);
+    const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+    
+    if (diffDays === 0) {
+        return 'dzisiaj';
+    } else if (diffDays === 1) {
+        return 'wczoraj';
+    } else {
+        return `${diffDays} dni temu`;
+    }
+}
+
 async function fetchActivities() {
     try {
         const response = await axios.get('/api/activities?limit=10');
@@ -21,41 +54,56 @@ function displayActivities(activities) {
 
 function createActivityElement(activity) {
     const div = document.createElement('div');
-    div.className = 'activity-item p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors';
+    const isNew = isActivityNew(activity);
+    
+    div.className = `activity-item p-4 border rounded-lg transition-colors ${
+        isNew ? 'border-blue-400 bg-blue-50' : 'border-gray-200'
+    } hover:bg-gray-50`;
+    
+    div.setAttribute('data-activity-id', activity._id);
 
-    const date = new Date(activity.created_at);
-    const formattedDate = date.toLocaleDateString('pl-PL', {
-        day: '2-digit',
-        month: '2-digit',
-        year: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit'
-    });
+    const relativeDate = formatRelativeDate(activity.created_at);
 
     div.innerHTML = `
         <div class="flex items-center justify-between">
-            <h3 class="text-lg font-semibold text-gray-800">${activity.title}</h3>
-            <span class="text-sm text-gray-500">${formattedDate}</span>
+            <div class="flex items-center gap-2">
+                ${isNew ? '<span class="inline-block px-2 py-1 text-xs bg-blue-500 text-white rounded-full">Nowe</span>' : ''}
+                <h3 class="text-lg font-semibold text-gray-800">${activity.title}</h3>
+            </div>
+            <span class="text-sm text-gray-500">${relativeDate}</span>
         </div>
         <div class="mt-2">
-            <span class="inline-block px-2 py-1 text-sm rounded-full ${getTypeColor(activity.type)}">
-                ${activity.type}
-            </span>
-            ${activity.url ? `<a href="${activity.url}" target="_blank" class="ml-2 text-blue-600 hover:text-blue-800">Otwórz →</a>` : ''}
+            ${activity.url ? `<a href="${activity.url}" target="_blank" class="text-blue-600 hover:text-blue-800">Otwórz →</a>` : ''}
         </div>
     `;
 
-    return div;
-}
+    // Dodaj obsługę zdarzeń dla oznaczania jako przeczytane
+    div.addEventListener('click', () => {
+        if (isNew) {
+            markActivityAsRead(activity._id);
+            div.classList.remove('border-blue-400', 'bg-blue-50');
+            div.classList.add('border-gray-200');
+            const newBadge = div.querySelector('.bg-blue-500');
+            if (newBadge) {
+                newBadge.remove();
+            }
+        }
+    });
 
-function getTypeColor(type) {
-    const colors = {
-        'resource': 'bg-blue-100 text-blue-800',
-        'assignment': 'bg-green-100 text-green-800',
-        'forum': 'bg-yellow-100 text-yellow-800',
-        'quiz': 'bg-purple-100 text-purple-800'
-    };
-    return colors[type] || 'bg-gray-100 text-gray-800';
+    // Dodaj też obsługę najechania myszką
+    div.addEventListener('mouseenter', () => {
+        if (isNew) {
+            markActivityAsRead(activity._id);
+            div.classList.remove('border-blue-400', 'bg-blue-50');
+            div.classList.add('border-gray-200');
+            const newBadge = div.querySelector('.bg-blue-500');
+            if (newBadge) {
+                newBadge.remove();
+            }
+        }
+    });
+
+    return div;
 }
 
 function displayError() {
