@@ -52,6 +52,25 @@ function displayActivities(activities) {
     });
 }
 
+function getContentHtml(activity) {
+    // Jeśli content jest obiektem z html/text
+    if (activity.content && typeof activity.content === 'object' && (activity.content.html || activity.content.text)) {
+        return activity.content.html || activity.content.text;
+    }
+    
+    // Jeśli mamy content_html lub content_text z API
+    if (activity.content_html || activity.content_text) {
+        return activity.content_html || activity.content_text;
+    }
+    
+    // Jeśli content jest bezpośrednio stringiem
+    if (activity.content && typeof activity.content === 'string') {
+        return activity.content;
+    }
+    
+    return '';
+}
+
 function createActivityElement(activity) {
     const div = document.createElement('div');
     const isNew = isActivityNew(activity);
@@ -94,7 +113,7 @@ function createActivityElement(activity) {
         ` : `
             <div class="content-section mt-2 hidden">
                 <div class="prose max-w-none">
-                    ${activity.content_html || activity.content_text || activity.content || ''}
+                    ${getContentHtml(activity)}
                     ${imagesHtml}
                 </div>
             </div>

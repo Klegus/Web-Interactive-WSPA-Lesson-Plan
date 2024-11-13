@@ -210,8 +210,7 @@ async def read_activities(
                 "created_at": activity.get("created_at"),
                 "position": activity.get("position"),
                 "checksum": activity.get("checksum"),
-                "content_html": activity.get("content", {}).get("html", "") if isinstance(activity.get("content"), dict) else activity.get("content", ""),
-                "content_text": activity.get("content", {}).get("text", "") if isinstance(activity.get("content"), dict) else activity.get("content", ""),
+                "content": activity.get("content", ""),
                 "images": activity.get("content", {}).get("images", []) if isinstance(activity.get("content"), dict) else []
             }
             processed_activities.append(processed_activity)
