@@ -5,8 +5,10 @@ from fastapi.templating import Jinja2Templates
 from fastapi.staticfiles import StaticFiles
 from pymongo import MongoClient
 from mangum import Mangum
-from typing import List, Dict, Optional
-from datetime import datetime, timedelta
+from typing import List, Dict
+from datetime import datetime
+from typing import Optional
+
 
 app = FastAPI()
 
@@ -143,7 +145,20 @@ async def get_comparisons(collection_name: str, group_name: str):
         raise HTTPException(status_code=500, detail=str(e))
 
 @app.get("/api/status")
-async def get_activities(
+async def get_status():
+    try:
+        async with httpx.AsyncClient() as client:
+            response = await client.get("http://37.27.207.141/status")
+        
+        if response.status_code == 200:
+            return response.json()
+        else:
+            raise HTTPException(status_code=response.status_code, detail="Failed to fetch status")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+    
+@app.get("/api/activities")
+async def read_activities(
     skip: int = 0,
     limit: int = 20,
     start_date: Optional[str] = None,
@@ -151,12 +166,12 @@ async def get_activities(
 ):
     try:
         # Podstawowa walidacja parametrów
-        if limit > 50:  # Maksymalny limit
+        if limit > 50:
             limit = 50
         if skip < 0:
             skip = 0
             
-        # Przygotowanie filtrów
+        # Przygotowanie filtrów czasowych
         query = {}
         if start_date or end_date:
             date_filter = {}
@@ -179,49 +194,32 @@ async def get_activities(
 
         # Pobieranie dokumentów z paginacją i sortowaniem
         activities = list(db.Activities.find(
-            query,
-            {
-                "_id": 1,
-                "type": 1,
-                "title": 1,
-                "url": 1,
-                "created_at": 1,
-                "sequence_number": 1,
-                "content_html": 1,
-                "content_text": 1
-            }
+            query
         ).sort("created_at", -1).skip(skip).limit(limit))
 
-        # Konwersja ObjectId na string
+        # Przekształcenie dokumentów do odpowiedniej struktury
+        processed_activities = []
         for activity in activities:
-            activity["_id"] = str(activity["_id"])
-            
+            processed_activity = {
+                "id": str(activity["_id"]),
+                "resource_id": activity.get("id"),
+                "type": activity.get("type"),
+                "title": activity.get("title"),
+                "url": activity.get("url"),
+                "sequence_number": activity.get("sequence_number"),
+                "created_at": activity.get("created_at"),
+                "position": activity.get("position"),
+                "checksum": activity.get("checksum"),
+                "content_html": activity.get("content", {}).get("html", ""),
+                "content_text": activity.get("content", {}).get("text", ""),
+                "images": activity.get("content", {}).get("images", [])
+            }
+            processed_activities.append(processed_activity)
+
         return {
             "total": db.Activities.count_documents(query),
-            "activities": activities
+            "activities": processed_activities
         }
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
-
-@app.get("/api/activities")
-async def read_activities(
-    skip: int = 0,
-    limit: int = 20,
-    start_date: Optional[str] = None,
-    end_date: Optional[str] = None
-):
-    return await get_activities(skip, limit, start_date, end_date)
-
-@app.get("/api/status")
-async def get_status():
-    try:
-        async with httpx.AsyncClient() as client:
-            response = await client.get("http://37.27.207.141/status")
-        
-        if response.status_code == 200:
-            return response.json()
-        else:
-            raise HTTPException(status_code=response.status_code, detail="Failed to fetch status")
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
