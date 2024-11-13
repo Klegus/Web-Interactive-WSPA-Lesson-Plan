@@ -591,3 +591,16 @@ input:checked + .slider:before {
   margin-top: 0.75em;
   margin-bottom: 0.75em;
 }
+.resource-btn {
+    background-color: var(--wspia-red);
+    color: white;
+    display: inline-flex;
+    align-items: center;
+    padding: 0.5rem 1rem;
+    border-radius: 0.25rem;
+    transition: background-color 0.2s ease;
+}
+
+.resource-btn:hover {
+    background-color: color-mix(in srgb, var(--wspia-red) 85%, black);
+}

@@ -88,7 +88,7 @@ function createActivityElement(activity) {
     const headerHtml = `
         <div class="flex items-center justify-between mb-3">
             <div class="flex items-center gap-2">
-                ${isNew ? '<span class="inline-block px-2 py-1 text-xs bg-blue-500 text-white rounded-full">Nowe</span>' : ''}
+                ${isNew ? '<span class="inline-block px-2 py-1 text-xs bg-green-500 text-white rounded-full new-badge">Nowe</span>' : ''}
                 <h3 class="text-lg font-semibold text-gray-800">${activity.title}</h3>
             </div>
             <span class="text-sm text-gray-500">${relativeDate}</span>
@@ -118,22 +118,22 @@ function createActivityElement(activity) {
                     ` : ''}
                 </div>
             `;
-            break;
+                break;
         case 'resource':
-            // Prosty widok z przyciskiem dla zasobów
-            div.innerHTML = `
-                ${headerHtml}
-                <div class="mt-2">
-                    <a href="${activity.url}" target="_blank" 
-                       class="inline-flex items-center px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors">
-                        Otwórz zasób
-                        <svg class="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/>
-                        </svg>
-                    </a>
-                </div>
-            `;
-            break;
+                    div.innerHTML = `
+                        ${headerHtml}
+                        <div class="mt-2">
+                            <a href="${activity.url}" target="_blank" 
+                               class="inline-flex items-center px-4 py-2 text-white rounded transition-colors"
+                               style="background-color: var(--wspaa-red)">
+                                Otwórz zasób
+                                <svg class="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/>
+                                </svg>
+                            </a>
+                        </div>
+                    `;
+                    break;
 
         case 'page':
             // Rozwijana strona z zawartością i linkiem
@@ -198,7 +198,7 @@ function createActivityElement(activity) {
             markActivityAsRead(activity.id);
             div.classList.remove('border-blue-400', 'bg-blue-50');
             div.classList.add('border-gray-200');
-            const newBadge = div.querySelector('.bg-blue-500');
+            const newBadge = div.querySelector('.new-badge');
             if (newBadge) newBadge.remove();
         }
 
@@ -217,7 +217,7 @@ function createActivityElement(activity) {
             markActivityAsRead(activity.id);
             div.classList.remove('border-blue-400', 'bg-blue-50');
             div.classList.add('border-gray-200');
-            const newBadge = div.querySelector('.bg-blue-500');
+            const newBadge = div.querySelector('.new-badge');
             if (newBadge) newBadge.remove();
         }
     });
