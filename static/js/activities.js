@@ -35,6 +35,7 @@ async function fetchActivities() {
     try {
         const response = await axios.get('/api/activities?limit=10');
         const activities = response.data.activities;
+        console.log('Pobrano aktywności:', activities);
         displayActivities(activities);
     } catch (error) {
         console.error('Błąd podczas pobierania aktywności:', error);
@@ -77,107 +78,147 @@ function createActivityElement(activity) {
     
     div.className = `activity-item p-4 border rounded-lg transition-colors ${
         isNew ? 'border-blue-400 bg-blue-50' : 'border-gray-200'
-    } ${activity.type === 'resource' ? '' : 'hover:bg-gray-50 cursor-pointer'}`;
+    }`;
     
     div.setAttribute('data-activity-id', activity.id);
-    div.setAttribute('data-expanded', 'false');
 
     const relativeDate = formatRelativeDate(activity.created_at);
 
-    // Przygotowanie sekcji z obrazami jeśli istnieją
-    const imagesHtml = activity.images && activity.images.length > 0 ? `
-        <div class="images-section mt-2 grid grid-cols-1 md:grid-cols-2 gap-4">
-            ${activity.images.map(img => `
-                <img 
-                    src="${img.src}" 
-                    alt="${img.alt}" 
-                    class="max-w-full h-auto rounded shadow-sm"
-                    style="max-height: 300px; object-fit: contain;"
-                />
-            `).join('')}
-        </div>
-    ` : '';
-
-    div.innerHTML = `
-        <div class="flex items-center justify-between">
+    // Wspólny nagłówek dla wszystkich typów
+    const headerHtml = `
+        <div class="flex items-center justify-between mb-3">
             <div class="flex items-center gap-2">
                 ${isNew ? '<span class="inline-block px-2 py-1 text-xs bg-blue-500 text-white rounded-full">Nowe</span>' : ''}
                 <h3 class="text-lg font-semibold text-gray-800">${activity.title}</h3>
             </div>
             <span class="text-sm text-gray-500">${relativeDate}</span>
         </div>
-        ${activity.type === 'resource' ? `
-            <div class="mt-2">
-                <a href="${activity.url}" target="_blank" class="inline-block px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors">Otwórz →</a>
-            </div>
-        ` : `
-            <div class="content-section mt-2 hidden">
-                <div class="prose max-w-none">
-                    ${getContentHtml(activity)}
-                    ${imagesHtml}
-                </div>
-            </div>
-            ${activity.url ? `
-                <div class="mt-2">
-                    <a href="${activity.url}" target="_blank" class="text-blue-600 hover:text-blue-800">Otwórz →</a>
-                </div>
-            ` : ''}
-        `}
     `;
 
+    // Obsługa różnych typów
+    switch (activity.type) {
+        case 'folder':
+            // Specjalny widok dla folderu z ikoną
+            div.innerHTML = `
+                ${headerHtml}
+                <div class="flex items-center gap-2 mt-2">
+                    <svg class="w-6 h-6 text-yellow-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                              d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"/>
+                    </svg>
+                    ${activity.url ? `
+                        <a href="${activity.url}" target="_blank" 
+                           class="text-blue-600 hover:text-blue-800 flex items-center">
+                            Otwórz folder
+                            <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                                      d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/>
+                            </svg>
+                        </a>
+                    ` : ''}
+                </div>
+            `;
+            break;
+        case 'resource':
+            // Prosty widok z przyciskiem dla zasobów
+            div.innerHTML = `
+                ${headerHtml}
+                <div class="mt-2">
+                    <a href="${activity.url}" target="_blank" 
+                       class="inline-flex items-center px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors">
+                        Otwórz zasób
+                        <svg class="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/>
+                        </svg>
+                    </a>
+                </div>
+            `;
+            break;
 
-    // Obsługa zdarzeń tylko dla typów page i label
-    if (activity.type !== 'resource') {
-        div.addEventListener('click', (e) => {
-            // Ignoruj kliknięcia w linki
-            if (e.target.tagName === 'A') {
-                return;
-            }
-
-            if (isNew) {
-                markActivityAsRead(activity.id);
-                div.classList.remove('border-blue-400', 'bg-blue-50');
-                div.classList.add('border-gray-200');
-                const newBadge = div.querySelector('.bg-blue-500');
-                if (newBadge) {
-                    newBadge.remove();
-                }
-            }
-
-            // Obsługa rozwijania/zwijania zawartości
-            const contentSection = div.querySelector('.content-section');
-            const isExpanded = div.getAttribute('data-expanded') === 'true';
+        case 'page':
+            // Rozwijana strona z zawartością i linkiem
+            div.className += ' cursor-pointer hover:bg-gray-50';
+            div.setAttribute('data-expanded', 'false');
             
-            if (contentSection) {
-                contentSection.classList.toggle('hidden');
-                div.setAttribute('data-expanded', !isExpanded);
-            }
-        });
-    } else {
-        // Dla resource oznacz jako przeczytane przy najechaniu
-        div.addEventListener('mouseenter', () => {
-            if (isNew) {
-                markActivityAsRead(activity.id);
-                div.classList.remove('border-blue-400', 'bg-blue-50');
-                div.classList.add('border-gray-200');
-                const newBadge = div.querySelector('.bg-blue-500');
-                if (newBadge) {
-                    newBadge.remove();
-                }
-            }
-        });
+            div.innerHTML = `
+                ${headerHtml}
+                <div class="content-section mt-2 hidden">
+                    <div class="prose max-w-none">
+                        ${activity.content || ''}
+                        ${activity.images && activity.images.length > 0 ? `
+                            <div class="images-section mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
+                                ${activity.images.map(img => `
+                                    <img src="${img.src}" alt="${img.alt}" class="max-w-full h-auto rounded shadow-sm"/>
+                                `).join('')}
+                            </div>
+                        ` : ''}
+                    </div>
+                </div>
+                <div class="mt-2">
+                Rozwiń lub 
+                    <a href="${activity.url}" target="_blank" class="text-blue-600 hover:text-blue-800">
+                        przejdż do zasobu →
+                    </a>
+                </div>
+            `;
+
+            // Dodanie obsługi rozwijania/zwijania
+            div.addEventListener('click', handleExpandCollapse);
+            break;
+
+        case 'label':
+            // Rozwijana etykieta tylko z zawartością
+            div.className += ' cursor-pointer hover:bg-gray-50';
+            div.setAttribute('data-expanded', 'false');
+            
+            div.innerHTML = `
+                ${headerHtml}
+                <div class="content-section mt-2 hidden">
+                    <div class="prose max-w-none">
+                        ${activity.content || ''}
+                    </div>
+                </div>
+                <div class="mt-2">
+                    
+                        Rozwiń →
+                    
+                </div>
+            `;
+
+            // Dodanie obsługi rozwijania/zwijania
+            div.addEventListener('click', handleExpandCollapse);
+            break;
     }
 
-    // Obsługa najechania myszką
-    div.addEventListener('mouseenter', () => {
+    // Funkcja obsługująca rozwijanie/zwijanie
+    function handleExpandCollapse(e) {
+        if (e.target.tagName === 'A') return;
+
         if (isNew) {
-            markActivityAsRead(activity.id); // Zmiana z _id na id
+            markActivityAsRead(activity.id);
             div.classList.remove('border-blue-400', 'bg-blue-50');
             div.classList.add('border-gray-200');
             const newBadge = div.querySelector('.bg-blue-500');
-            if (newBadge) {
-                newBadge.remove();
-            }
+            if (newBadge) newBadge.remove();
+        }
+
+        const contentSection = div.querySelector('.content-section');
+        const isExpanded = div.getAttribute('data-expanded') === 'true';
+        
+        if (contentSection) {
+            contentSection.classList.toggle('hidden');
+            div.setAttribute('data-expanded', !isExpanded);
+        }
+    }
+
+    // Oznaczanie jako przeczytane przy najechaniu dla wszystkich typów
+    div.addEventListener('mouseenter', () => {
+        if (isNew) {
+            markActivityAsRead(activity.id);
+            div.classList.remove('border-blue-400', 'bg-blue-50');
+            div.classList.add('border-gray-200');
+            const newBadge = div.querySelector('.bg-blue-500');
+            if (newBadge) newBadge.remove();
         }
     });
 

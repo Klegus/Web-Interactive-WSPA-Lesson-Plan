@@ -7,7 +7,6 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
     <link rel="stylesheet" href="static/css/style.css" />
-    <script src="static/js/activities.js" defer></script>
   </head>
   <body class="min-h-screen font-sans text-gray-800">
     <div class="server-status-container">
@@ -110,7 +109,9 @@
             class="text-xl font-semibold mb-3 text-gray-700"
           ></p>
           <p id="plan-date" class="mb-6 text-gray-600"></p>
-          <div id="plan-content" class="overflow-x-auto"></div>
+          <div id="plan-content" class="overflow-x-auto" style="-webkit-overflow-scrolling: touch;">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=3.0, user-scalable=yes">
+          </div>
         </div>
 
         <!-- Comparisons section - initially hidden -->
@@ -123,11 +124,10 @@
             class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8"
           ></div>
         </div>
-
         <!-- Recent activities section -->
         <div id="activities-section" class="mt-8">
           <h2 class="text-4xl font-bold mb-8 text-center text-gray-700">
-            Ostatnie aktywności
+            Blog WSPA
           </h2>
           <div id="activities-container" class="bg-white p-8 rounded-lg shadow-lg">
             <div id="activities-list" class="space-y-4"></div>
@@ -224,5 +224,6 @@
         }
     </script>
     <script src="static/js/plan.js"></script>
+    <script src="static/js/activities.js" defer></script>
   </body>
 </html>

@@ -192,10 +192,13 @@ async def read_activities(
             if date_filter:
                 query["created_at"] = date_filter
 
-        # Pobieranie dokumentów z paginacją i sortowaniem
+        # Pobieranie dokumentów z paginacją i sortowaniem po position (malejąco)
         activities = list(db.Activities.find(
             query
-        ).sort("created_at", -1).skip(skip).limit(limit))
+        ).sort([
+            ("position", -1),  # Sortowanie po position malejąco jako główne kryterium
+            ("created_at", -1)  # Sortowanie po created_at jako drugie kryterium
+        ]).skip(skip).limit(limit))
 
         # Przekształcenie dokumentów do odpowiedniej struktury
         processed_activities = []
