@@ -76,7 +76,7 @@ function createActivityElement(activity) {
         ${activity.type === 'label' ? `
             <div class="content-section mt-2 hidden">
                 <div class="prose max-w-none">
-                    ${activity.content_html || activity.content_text || ''}
+                    ${activity.content_html?.html || activity.content_text?.text || ''}
                 </div>
             </div>
         ` : ''}
