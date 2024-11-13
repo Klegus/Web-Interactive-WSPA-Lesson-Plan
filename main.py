@@ -5,7 +5,8 @@ from fastapi.templating import Jinja2Templates
 from fastapi.staticfiles import StaticFiles
 from pymongo import MongoClient
 from mangum import Mangum
-from typing import List, Dict
+from typing import List, Dict, Optional
+from datetime import datetime, timedelta
 
 app = FastAPI()
 
@@ -142,7 +143,65 @@ async def get_comparisons(collection_name: str, group_name: str):
         raise HTTPException(status_code=500, detail=str(e))
 
 @app.get("/api/status")
-async def get_status():
+async def get_activities(
+    skip: int = 0,
+    limit: int = 20,
+    start_date: Optional[str] = None,
+    end_date: Optional[str] = None
+):
+    try:
+        # Podstawowa walidacja parametrów
+        if limit > 50:  # Maksymalny limit
+            limit = 50
+        if skip < 0:
+            skip = 0
+            
+        # Przygotowanie filtrów
+        query = {}
+        if start_date or end_date:
+            date_filter = {}
+            if start_date:
+                try:
+                    start_datetime = datetime.fromisoformat(start_date)
+                    date_filter["$gte"] = start_datetime
+                except ValueError:
+                    raise HTTPException(status_code=400, detail="Invalid start_date format")
+            
+            if end_date:
+                try:
+                    end_datetime = datetime.fromisoformat(end_date)
+                    date_filter["$lte"] = end_datetime
+                except ValueError:
+                    raise HTTPException(status_code=400, detail="Invalid end_date format")
+            
+            if date_filter:
+                query["created_at"] = date_filter
+
+        # Pobieranie dokumentów z paginacją i sortowaniem
+        activities = list(db.Activities.find(
+            query,
+            {
+                "_id": 1,
+                "type": 1,
+                "title": 1,
+                "url": 1,
+                "created_at": 1,
+                "sequence_number": 1
+            }
+        ).sort("created_at", -1).skip(skip).limit(limit))
+
+        # Konwersja ObjectId na string
+        for activity in activities:
+            activity["_id"] = str(activity["_id"])
+            
+        return {
+            "total": db.Activities.count_documents(query),
+            "activities": activities
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/api/status")
     try:
         async with httpx.AsyncClient() as client:
             response = await client.get("http://37.27.207.141/status")
