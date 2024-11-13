@@ -12,7 +12,7 @@ function markActivityAsRead(activityId) {
 
 function isActivityNew(activity) {
     const readActivities = getReadActivities();
-    return !readActivities[activity._id];
+    return !readActivities[activity.id]; // Zmiana z _id na id
 }
 
 // Funkcja formatująca względną datę
@@ -60,10 +60,24 @@ function createActivityElement(activity) {
         isNew ? 'border-blue-400 bg-blue-50' : 'border-gray-200'
     } hover:bg-gray-50 cursor-pointer`;
     
-    div.setAttribute('data-activity-id', activity._id);
+    div.setAttribute('data-activity-id', activity.id);
     div.setAttribute('data-expanded', 'false');
 
     const relativeDate = formatRelativeDate(activity.created_at);
+
+    // Przygotowanie sekcji z obrazami jeśli istnieją
+    const imagesHtml = activity.images && activity.images.length > 0 ? `
+        <div class="images-section mt-2 grid grid-cols-1 md:grid-cols-2 gap-4">
+            ${activity.images.map(img => `
+                <img 
+                    src="${img.src}" 
+                    alt="${img.alt}" 
+                    class="max-w-full h-auto rounded shadow-sm"
+                    style="max-height: 300px; object-fit: contain;"
+                />
+            `).join('')}
+        </div>
+    ` : '';
 
     div.innerHTML = `
         <div class="flex items-center justify-between">
@@ -73,19 +87,19 @@ function createActivityElement(activity) {
             </div>
             <span class="text-sm text-gray-500">${relativeDate}</span>
         </div>
-        ${activity.type === 'label' ? `
-            <div class="content-section mt-2 hidden">
-                <div class="prose max-w-none">
-                    ${activity.content_html?.html || activity.content_text?.text || ''}
-                </div>
+        <div class="content-section mt-2 hidden">
+            <div class="prose max-w-none">
+                ${activity.content_html || activity.content_text || ''}
+                ${imagesHtml}
             </div>
-        ` : ''}
+        </div>
         <div class="mt-2">
             ${activity.url ? `<a href="${activity.url}" target="_blank" class="text-blue-600 hover:text-blue-800">Otwórz →</a>` : ''}
         </div>
     `;
 
-    // Dodaj obsługę zdarzeń dla oznaczania jako przeczytane i rozwijania
+
+    // Obsługa zdarzeń
     div.addEventListener('click', (e) => {
         // Ignoruj kliknięcia w linki
         if (e.target.tagName === 'A') {
@@ -93,7 +107,7 @@ function createActivityElement(activity) {
         }
 
         if (isNew) {
-            markActivityAsRead(activity._id);
+            markActivityAsRead(activity.id); // Zmiana z _id na id
             div.classList.remove('border-blue-400', 'bg-blue-50');
             div.classList.add('border-gray-200');
             const newBadge = div.querySelector('.bg-blue-500');
@@ -102,22 +116,20 @@ function createActivityElement(activity) {
             }
         }
 
-        // Obsługa rozwijania/zwijania dla typu 'label'
-        if (activity.type === 'label') {
-            const contentSection = div.querySelector('.content-section');
-            const isExpanded = div.getAttribute('data-expanded') === 'true';
-            
-            if (contentSection) {
-                contentSection.classList.toggle('hidden');
-                div.setAttribute('data-expanded', !isExpanded);
-            }
+        // Obsługa rozwijania/zwijania zawartości
+        const contentSection = div.querySelector('.content-section');
+        const isExpanded = div.getAttribute('data-expanded') === 'true';
+        
+        if (contentSection) {
+            contentSection.classList.toggle('hidden');
+            div.setAttribute('data-expanded', !isExpanded);
         }
     });
 
-    // Dodaj też obsługę najechania myszką
+    // Obsługa najechania myszką
     div.addEventListener('mouseenter', () => {
         if (isNew) {
-            markActivityAsRead(activity._id);
+            markActivityAsRead(activity.id); // Zmiana z _id na id
             div.classList.remove('border-blue-400', 'bg-blue-50');
             div.classList.add('border-gray-200');
             const newBadge = div.querySelector('.bg-blue-500');
