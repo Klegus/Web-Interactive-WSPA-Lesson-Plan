@@ -58,9 +58,10 @@ function createActivityElement(activity) {
     
     div.className = `activity-item p-4 border rounded-lg transition-colors ${
         isNew ? 'border-blue-400 bg-blue-50' : 'border-gray-200'
-    } hover:bg-gray-50`;
+    } hover:bg-gray-50 cursor-pointer`;
     
     div.setAttribute('data-activity-id', activity._id);
+    div.setAttribute('data-expanded', 'false');
 
     const relativeDate = formatRelativeDate(activity.created_at);
 
@@ -72,13 +73,25 @@ function createActivityElement(activity) {
             </div>
             <span class="text-sm text-gray-500">${relativeDate}</span>
         </div>
+        ${activity.type === 'label' ? `
+            <div class="content-section mt-2 hidden">
+                <div class="prose max-w-none">
+                    ${activity.content_html || activity.content_text || ''}
+                </div>
+            </div>
+        ` : ''}
         <div class="mt-2">
             ${activity.url ? `<a href="${activity.url}" target="_blank" class="text-blue-600 hover:text-blue-800">Otwórz →</a>` : ''}
         </div>
     `;
 
-    // Dodaj obsługę zdarzeń dla oznaczania jako przeczytane
-    div.addEventListener('click', () => {
+    // Dodaj obsługę zdarzeń dla oznaczania jako przeczytane i rozwijania
+    div.addEventListener('click', (e) => {
+        // Ignoruj kliknięcia w linki
+        if (e.target.tagName === 'A') {
+            return;
+        }
+
         if (isNew) {
             markActivityAsRead(activity._id);
             div.classList.remove('border-blue-400', 'bg-blue-50');
@@ -86,6 +99,17 @@ function createActivityElement(activity) {
             const newBadge = div.querySelector('.bg-blue-500');
             if (newBadge) {
                 newBadge.remove();
+            }
+        }
+
+        // Obsługa rozwijania/zwijania dla typu 'label'
+        if (activity.type === 'label') {
+            const contentSection = div.querySelector('.content-section');
+            const isExpanded = div.getAttribute('data-expanded') === 'true';
+            
+            if (contentSection) {
+                contentSection.classList.toggle('hidden');
+                div.setAttribute('data-expanded', !isExpanded);
             }
         }
     });

@@ -186,7 +186,9 @@ async def get_activities(
                 "title": 1,
                 "url": 1,
                 "created_at": 1,
-                "sequence_number": 1
+                "sequence_number": 1,
+                "content_html": 1,
+                "content_text": 1
             }
         ).sort("created_at", -1).skip(skip).limit(limit))
 
