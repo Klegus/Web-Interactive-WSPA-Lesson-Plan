@@ -124,33 +124,18 @@
             class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8"
           ></div>
         </div>
+        <!-- Recent activities section -->
+        <div id="activities-section" class="mt-8">
+          <h2 class="text-4xl font-bold mb-8 text-center text-gray-700">
+            Blog WSPA
+          </h2>
+          <div id="activities-container" class="bg-white p-8 rounded-lg shadow-lg">
+            <div id="activities-list" class="space-y-4"></div>
+          </div>
+        </div>
       </div>
     </div>
     <script>
-    function wrapCellContent(cell) {
-      const content = cell.innerHTML;
-      if (!cell.querySelector('.cell-content')) {
-        const wrapper = document.createElement('div');
-        wrapper.className = 'cell-content';
-        wrapper.innerHTML = content;
-        
-        if (wrapper.scrollHeight > 50) {
-          const expandBtn = document.createElement('button');
-          expandBtn.className = 'expand-btn';
-          expandBtn.textContent = '...';
-          expandBtn.onclick = (e) => {
-            e.stopPropagation();
-            cell.classList.toggle('expanded');
-            expandBtn.textContent = cell.classList.contains('expanded') ? '←' : '...';
-          };
-          cell.appendChild(expandBtn);
-        }
-        
-        cell.innerHTML = '';
-        cell.appendChild(wrapper);
-      }
-    }
-
     function formatTimeColumn(content) {
             const times = content.split('-');
             return times.map(time => {
@@ -239,21 +224,6 @@
         }
     </script>
     <script src="static/js/plan.js"></script>
-    <script>
-      // Wrap cell contents after plan is loaded
-      const observer = new MutationObserver((mutations) => {
-        mutations.forEach((mutation) => {
-          if (mutation.target.id === 'plan-content') {
-            const cells = document.querySelectorAll('#plan-content td:not(:first-child)');
-            cells.forEach(wrapCellContent);
-          }
-        });
-      });
-      
-      observer.observe(document.getElementById('plan-content'), {
-        childList: true,
-        subtree: true
-      });
-    </script>
+    <script src="static/js/activities.js" defer></script>
   </body>
 </html>

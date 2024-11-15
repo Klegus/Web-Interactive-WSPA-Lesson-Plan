@@ -6,6 +6,9 @@ from fastapi.staticfiles import StaticFiles
 from pymongo import MongoClient
 from mangum import Mangum
 from typing import List, Dict
+from datetime import datetime
+from typing import Optional
+
 
 app = FastAPI()
 
@@ -151,6 +154,74 @@ async def get_status():
             return response.json()
         else:
             raise HTTPException(status_code=response.status_code, detail="Failed to fetch status")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+    
+@app.get("/api/activities")
+async def read_activities(
+    skip: int = 0,
+    limit: int = 20,
+    start_date: Optional[str] = None,
+    end_date: Optional[str] = None
+):
+    try:
+        # Podstawowa walidacja parametrów
+        if limit > 50:
+            limit = 50
+        if skip < 0:
+            skip = 0
+            
+        # Przygotowanie filtrów czasowych
+        query = {}
+        if start_date or end_date:
+            date_filter = {}
+            if start_date:
+                try:
+                    start_datetime = datetime.fromisoformat(start_date)
+                    date_filter["$gte"] = start_datetime
+                except ValueError:
+                    raise HTTPException(status_code=400, detail="Invalid start_date format")
+            
+            if end_date:
+                try:
+                    end_datetime = datetime.fromisoformat(end_date)
+                    date_filter["$lte"] = end_datetime
+                except ValueError:
+                    raise HTTPException(status_code=400, detail="Invalid end_date format")
+            
+            if date_filter:
+                query["created_at"] = date_filter
+
+        # Pobieranie dokumentów z paginacją i sortowaniem po position (malejąco)
+        activities = list(db.Activities.find(
+            query
+        ).sort([
+            ("position", -1),  # Sortowanie po position malejąco jako główne kryterium
+            ("created_at", -1)  # Sortowanie po created_at jako drugie kryterium
+        ]).skip(skip).limit(limit))
+
+        # Przekształcenie dokumentów do odpowiedniej struktury
+        processed_activities = []
+        for activity in activities:
+            processed_activity = {
+                "id": str(activity["_id"]),
+                "resource_id": activity.get("id"),
+                "type": activity.get("type"),
+                "title": activity.get("title"),
+                "url": activity.get("url"),
+                "sequence_number": activity.get("sequence_number"),
+                "created_at": activity.get("created_at"),
+                "position": activity.get("position"),
+                "checksum": activity.get("checksum"),
+                "content": activity.get("content", ""),
+                "images": activity.get("content", {}).get("images", []) if isinstance(activity.get("content"), dict) else []
+            }
+            processed_activities.append(processed_activity)
+
+        return {
+            "total": db.Activities.count_documents(query),
+            "activities": processed_activities
+        }
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
